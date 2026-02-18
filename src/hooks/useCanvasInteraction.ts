@@ -41,20 +41,29 @@ export function useCanvasInteraction(
   }, [requestRedraw]);
 
   // Apply zoom toward a given screen-space point
-  const applyZoom = useCallback((newZoom: number, screenX: number, screenY: number) => {
-    const { zoom: oldZoom, panX, panY, imageWidth, imageHeight } = useAppStore.getState();
+  const applyZoom = useCallback(
+    (newZoom: number, screenX: number, screenY: number) => {
+      const { zoom: oldZoom, panX, panY, imageWidth, imageHeight } = useAppStore.getState();
 
-    const canvas = canvasRef.current;
-    const minZoom = canvas && imageWidth && imageHeight
-      ? computeFitZoom(canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1), imageWidth, imageHeight)
-      : MIN_ZOOM;
+      const canvas = canvasRef.current;
+      const minZoom =
+        canvas && imageWidth && imageHeight
+          ? computeFitZoom(
+              canvas.width / (window.devicePixelRatio || 1),
+              canvas.height / (window.devicePixelRatio || 1),
+              imageWidth,
+              imageHeight,
+            )
+          : MIN_ZOOM;
 
-    const clamped = clamp(newZoom, minZoom, MAX_ZOOM);
-    if (clamped === oldZoom) return;
-    const newPanX = screenX - (screenX - panX) * (clamped / oldZoom);
-    const newPanY = screenY - (screenY - panY) * (clamped / oldZoom);
-    useAppStore.getState().setViewport(clamped, newPanX, newPanY);
-  }, [canvasRef]);
+      const clamped = clamp(newZoom, minZoom, MAX_ZOOM);
+      if (clamped === oldZoom) return;
+      const newPanX = screenX - (screenX - panX) * (clamped / oldZoom);
+      const newPanY = screenY - (screenY - panY) * (clamped / oldZoom);
+      useAppStore.getState().setViewport(clamped, newPanX, newPanY);
+    },
+    [canvasRef],
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -142,11 +151,7 @@ export function useCanvasInteraction(
       const dx = e.clientX - panStart.current.x;
       const dy = e.clientY - panStart.current.y;
       const { zoom } = useAppStore.getState();
-      useAppStore.getState().setViewport(
-        zoom,
-        panOrigin.current.x + dx,
-        panOrigin.current.y + dy,
-      );
+      useAppStore.getState().setViewport(zoom, panOrigin.current.x + dx, panOrigin.current.y + dy);
     };
 
     const onPointerUp = (e: PointerEvent) => {

@@ -34,9 +34,7 @@ export default function Toolbar({ onToggleHelp }: ToolbarProps) {
             }`}
             style={{
               boxShadow:
-                activeClassId === cls.id
-                  ? `0 0 0 2px white, 0 0 0 4px ${cls.color}`
-                  : undefined,
+                activeClassId === cls.id ? `0 0 0 2px white, 0 0 0 4px ${cls.color}` : undefined,
             }}
             aria-label={`Select class: ${cls.name} (${cls.shortcut})`}
           >
@@ -45,9 +43,7 @@ export default function Toolbar({ onToggleHelp }: ToolbarProps) {
               style={{ backgroundColor: cls.color }}
             />
             <span>{cls.name}</span>
-            <kbd className="text-[10px] text-gray-400 bg-gray-100 px-1 rounded">
-              {cls.shortcut}
-            </kbd>
+            <kbd className="text-[10px] text-gray-400 bg-gray-100 px-1 rounded">{cls.shortcut}</kbd>
           </button>
         ))}
       </div>

@@ -45,9 +45,9 @@ export default function ExportPanel() {
       if (hasImage && (session.imageWidth !== imageWidth || session.imageHeight !== imageHeight)) {
         const proceed = window.confirm(
           `Image dimensions mismatch:\n` +
-          `Current: ${imageWidth}×${imageHeight}\n` +
-          `JSON: ${session.imageWidth}×${session.imageHeight}\n\n` +
-          `Import anyway? Annotations may not align correctly.`
+            `Current: ${imageWidth}×${imageHeight}\n` +
+            `JSON: ${session.imageWidth}×${session.imageHeight}\n\n` +
+            `Import anyway? Annotations may not align correctly.`,
         );
         if (!proceed) return;
       }

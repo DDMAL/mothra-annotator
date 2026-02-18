@@ -26,13 +26,21 @@ function getClassName(classId: number): string {
   return CLASSES.find((c) => c.id === classId)?.name ?? 'unknown';
 }
 
-export default function AnnotationCanvas({ image, isHelpOpen, onToggleHelp }: AnnotationCanvasProps) {
+export default function AnnotationCanvas({
+  image,
+  isHelpOpen,
+  onToggleHelp,
+}: AnnotationCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const rafId = useRef<number>(0);
   // Getter function ref — populated after useCanvasInteraction initializes
   const getDrawingStateRef = useRef<() => DrawingState>(() => ({
-    isDrawing: false, startX: 0, startY: 0, currentX: 0, currentY: 0,
+    isDrawing: false,
+    startX: 0,
+    startY: 0,
+    currentX: 0,
+    currentY: 0,
   }));
 
   const draw = useCallback(() => {
@@ -41,10 +49,8 @@ export default function AnnotationCanvas({ image, isHelpOpen, onToggleHelp }: An
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const {
-      zoom, panX, panY,
-      annotations, boxOpacity, showLabels, selectedId, activeClassId,
-    } = useAppStore.getState();
+    const { zoom, panX, panY, annotations, boxOpacity, showLabels, selectedId, activeClassId } =
+      useAppStore.getState();
     const dpr = window.devicePixelRatio || 1;
 
     // Clear
@@ -129,8 +135,7 @@ export default function AnnotationCanvas({ image, isHelpOpen, onToggleHelp }: An
     rafId.current = requestAnimationFrame(draw);
   }, [draw]);
 
-  const { getDrawingState, cancelDrawing } =
-    useCanvasInteraction(canvasRef, requestRedraw);
+  const { getDrawingState, cancelDrawing } = useCanvasInteraction(canvasRef, requestRedraw);
   useEffect(() => {
     getDrawingStateRef.current = getDrawingState;
   }, [getDrawingState]);
@@ -152,7 +157,12 @@ export default function AnnotationCanvas({ image, isHelpOpen, onToggleHelp }: An
 
     useAppStore.getState().setCanvasSize(containerWidth, containerHeight);
 
-    const fitZoom = computeFitZoom(containerWidth, containerHeight, image.naturalWidth, image.naturalHeight);
+    const fitZoom = computeFitZoom(
+      containerWidth,
+      containerHeight,
+      image.naturalWidth,
+      image.naturalHeight,
+    );
 
     const panX = (containerWidth - image.naturalWidth * fitZoom) / 2;
     const panY = (containerHeight - image.naturalHeight * fitZoom) / 2;

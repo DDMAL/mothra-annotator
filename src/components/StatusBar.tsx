@@ -37,9 +37,7 @@ export default function StatusBar() {
 
       {/* Cursor coordinates */}
       <span className="tabular-nums w-32">
-        {cursorImageCoords
-          ? `X: ${cursorImageCoords[0]}  Y: ${cursorImageCoords[1]}`
-          : '—'}
+        {cursorImageCoords ? `X: ${cursorImageCoords[0]}  Y: ${cursorImageCoords[1]}` : '—'}
       </span>
 
       {/* Spacer */}

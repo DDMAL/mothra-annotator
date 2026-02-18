@@ -75,7 +75,12 @@ export async function importJSON(file: File): Promise<AnnotationSession> {
   }
 
   for (const ann of data.annotations) {
-    if (!ann.id || typeof ann.classId !== 'number' || !Array.isArray(ann.bbox) || ann.bbox.length !== 4) {
+    if (
+      !ann.id ||
+      typeof ann.classId !== 'number' ||
+      !Array.isArray(ann.bbox) ||
+      ann.bbox.length !== 4
+    ) {
       throw new Error('Invalid annotation entry in JSON');
     }
   }
