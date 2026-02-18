@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { CLASSES } from '../lib/constants';
-import { toJSON } from '../lib/export';
+import { downloadJSON } from '../lib/export';
 
 interface ShortcutActions {
   cancelDrawing: () => void;
@@ -9,18 +9,10 @@ interface ShortcutActions {
   toggleHelp: () => void;
 }
 
-function downloadJSON() {
+function quickSaveJSON() {
   const { annotations, imageName, imageWidth, imageHeight } = useAppStore.getState();
   if (!imageName) return;
-  const session = { imageName, imageWidth, imageHeight, annotations };
-  const json = toJSON(session);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${imageName.replace(/\.[^.]+$/, '')}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadJSON({ imageName, imageWidth, imageHeight, annotations });
 }
 
 export function useKeyboardShortcuts({ cancelDrawing, isHelpOpen, toggleHelp }: ShortcutActions) {
@@ -33,7 +25,7 @@ export function useKeyboardShortcuts({ cancelDrawing, isHelpOpen, toggleHelp }: 
       // Ctrl/Cmd+S → quick-save JSON
       if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
-        downloadJSON();
+        quickSaveJSON();
         return;
       }
 

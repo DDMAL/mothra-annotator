@@ -3,6 +3,7 @@ import Toolbar from './components/Toolbar';
 import ImageLoader from './components/ImageLoader';
 import AnnotationCanvas from './components/AnnotationCanvas';
 import AnnotationList from './components/AnnotationList';
+import ExportPanel from './components/ExportPanel';
 import StatusBar from './components/StatusBar';
 import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp';
 import { useImageLoader } from './hooks/useImageLoader';
@@ -23,7 +24,10 @@ function App() {
             <ImageLoader onLoadImage={loadImage} error={error} />
           )}
         </div>
-        <AnnotationList />
+        <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
+          <AnnotationList />
+          <ExportPanel />
+        </div>
       </div>
       <StatusBar />
       <KeyboardShortcutsHelp isOpen={showHelp} onClose={toggleHelp} />
