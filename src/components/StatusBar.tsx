@@ -8,9 +8,12 @@ function SessionIndicator() {
 
   useEffect(() => {
     if (!lastSaved) return;
-    setVisible(true);
-    const timer = setTimeout(() => setVisible(false), 2000);
-    return () => clearTimeout(timer);
+    const showTimer = setTimeout(() => setVisible(true), 0);
+    const hideTimer = setTimeout(() => setVisible(false), 2000);
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+    };
   }, [lastSaved]);
 
   if (!visible) return null;
