@@ -22,6 +22,7 @@ interface AppState {
   // UI state
   boxOpacity: number;
   showLabels: boolean;
+  lastSaved: number | null;
 
   // Viewport state
   zoom: number;
@@ -43,6 +44,7 @@ interface AppState {
   setImageInfo: (name: string, width: number, height: number) => void;
   setCanvasSize: (width: number, height: number) => void;
   restoreSession: (annotations: Annotation[]) => void;
+  setLastSaved: (timestamp: number) => void;
 
   // Zoom actions (usable from Toolbar, keyboard shortcuts, etc.)
   zoomIn: () => void;
@@ -66,6 +68,7 @@ export const useAppStore = create<AppState>((set) => ({
 
   boxOpacity: 0.3,
   showLabels: true,
+  lastSaved: null,
 
   zoom: 1,
   panX: 0,
@@ -127,6 +130,8 @@ export const useAppStore = create<AppState>((set) => ({
   setCanvasSize: (width, height) => set({ canvasWidth: width, canvasHeight: height }),
 
   restoreSession: (annotations) => set({ annotations, undoStack: [], selectedId: null }),
+
+  setLastSaved: (timestamp) => set({ lastSaved: timestamp }),
 
   zoomIn: () => {
     const { zoom, panX, panY, canvasWidth, canvasHeight, imageWidth, imageHeight } =

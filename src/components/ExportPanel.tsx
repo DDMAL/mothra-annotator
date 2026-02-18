@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { downloadJSON, downloadYOLO, downloadBoth, importJSON } from '../lib/export';
+import { clearSession } from '../lib/storage';
 import type { AnnotationSession } from '../lib/types';
 
 function buildSession(): AnnotationSession | null {
@@ -104,6 +105,19 @@ export default function ExportPanel() {
           className="hidden"
         />
       </div>
+      {hasImage && (
+        <button
+          onClick={() => {
+            if (!window.confirm('Clear saved session and all annotations for this image?')) return;
+            if (imageName) clearSession(imageName);
+            useAppStore.getState().clearAll();
+          }}
+          className="w-full mt-2 px-3 py-1.5 text-xs font-medium rounded bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+          aria-label="Clear saved session"
+        >
+          Clear Session
+        </button>
+      )}
     </div>
   );
 }

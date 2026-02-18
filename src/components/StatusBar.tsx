@@ -1,5 +1,27 @@
+import { useState, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { CLASSES } from '../lib/constants';
+
+function SessionIndicator() {
+  const lastSaved = useAppStore((s) => s.lastSaved);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (!lastSaved) return;
+    setVisible(true);
+    const timer = setTimeout(() => setVisible(false), 2000);
+    return () => clearTimeout(timer);
+  }, [lastSaved]);
+
+  if (!visible) return null;
+
+  return (
+    <span className="text-green-600 flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
+      Saved
+    </span>
+  );
+}
 
 export default function StatusBar() {
   const zoom = useAppStore((s) => s.zoom);
@@ -22,6 +44,9 @@ export default function StatusBar() {
 
       {/* Spacer */}
       <div className="flex-1" />
+
+      {/* Session saved indicator */}
+      <SessionIndicator />
 
       {/* Active class */}
       {activeClass && (

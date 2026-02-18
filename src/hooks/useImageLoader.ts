@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useAppStore } from '../store/useAppStore';
+import { loadSession } from '../lib/storage';
 
 export function useImageLoader() {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
@@ -25,6 +26,15 @@ export function useImageLoader() {
         setImageWidth(img.naturalWidth);
         setImageHeight(img.naturalHeight);
         useAppStore.getState().setImageInfo(file.name, img.naturalWidth, img.naturalHeight);
+
+        const saved = loadSession(file.name);
+        if (
+          saved &&
+          saved.imageWidth === img.naturalWidth &&
+          saved.imageHeight === img.naturalHeight
+        ) {
+          useAppStore.getState().restoreSession(saved.annotations);
+        }
       };
       img.onerror = () => {
         setError('Failed to load image. The file may be corrupted or in an unsupported format.');
