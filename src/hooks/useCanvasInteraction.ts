@@ -1,10 +1,21 @@
 import { useEffect, useRef, useCallback } from 'react';
 import type { RefObject } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { screenToImage, clamp, computeFitZoom } from '../lib/geometry';
-import { MIN_ZOOM, MAX_ZOOM, ZOOM_STEP } from '../lib/constants';
+import { screenToImage, clamp, computeFitZoom, pointInRect } from '../lib/geometry';
+import { MIN_ZOOM, MAX_ZOOM, ZOOM_STEP, MIN_BOX_SIZE } from '../lib/constants';
 
-export function useCanvasInteraction(canvasRef: RefObject<HTMLCanvasElement | null>) {
+export interface DrawingState {
+  isDrawing: boolean;
+  startX: number;
+  startY: number;
+  currentX: number;
+  currentY: number;
+}
+
+export function useCanvasInteraction(
+  canvasRef: RefObject<HTMLCanvasElement | null>,
+  requestRedraw: () => void,
+) {
   const spaceHeld = useRef(false);
   const isPanning = useRef(false);
   const panStart = useRef({ x: 0, y: 0 });
@@ -12,12 +23,27 @@ export function useCanvasInteraction(canvasRef: RefObject<HTMLCanvasElement | nu
   const cursorRafPending = useRef(false);
   const lastPointerPos = useRef<{ x: number; y: number } | null>(null);
 
+  const drawingState = useRef<DrawingState>({
+    isDrawing: false,
+    startX: 0,
+    startY: 0,
+    currentX: 0,
+    currentY: 0,
+  });
+
+  const getDrawingState = useCallback((): DrawingState => drawingState.current, []);
+
+  const cancelDrawing = useCallback(() => {
+    if (drawingState.current.isDrawing) {
+      drawingState.current.isDrawing = false;
+      requestRedraw();
+    }
+  }, [requestRedraw]);
+
   // Apply zoom toward a given screen-space point
   const applyZoom = useCallback((newZoom: number, screenX: number, screenY: number) => {
     const { zoom: oldZoom, panX, panY, imageWidth, imageHeight } = useAppStore.getState();
 
-    // Floor is the fit zoom: user can't zoom out smaller than fit-to-canvas.
-    // Falls back to MIN_ZOOM if canvas/image dimensions aren't available yet.
     const canvas = canvasRef.current;
     const minZoom = canvas && imageWidth && imageHeight
       ? computeFitZoom(canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1), imageWidth, imageHeight)
@@ -77,17 +103,46 @@ export function useCanvasInteraction(canvasRef: RefObject<HTMLCanvasElement | nu
       applyZoom(zoom + delta, e.offsetX, e.offsetY);
     };
 
-    // --- Pan: middle-click or Space+left-click ---
+    // --- Pointer down: pan, select, or start drawing ---
     const onPointerDown = (e: PointerEvent) => {
+      // Middle-click or Space+left-click → pan
       const isMiddle = e.button === 1;
       const isSpaceLeft = e.button === 0 && spaceHeld.current;
-      if (!isMiddle && !isSpaceLeft) return;
-      e.preventDefault();
-      isPanning.current = true;
-      panStart.current = { x: e.clientX, y: e.clientY };
-      const { panX, panY } = useAppStore.getState();
-      panOrigin.current = { x: panX, y: panY };
-      canvas.setPointerCapture(e.pointerId);
+      if (isMiddle || isSpaceLeft) {
+        e.preventDefault();
+        isPanning.current = true;
+        panStart.current = { x: e.clientX, y: e.clientY };
+        const { panX, panY } = useAppStore.getState();
+        panOrigin.current = { x: panX, y: panY };
+        canvas.setPointerCapture(e.pointerId);
+        canvas.style.cursor = 'grabbing';
+        return;
+      }
+
+      // Left-click (no modifier) → select or start drawing
+      if (e.button === 0 && !e.ctrlKey && !e.metaKey) {
+        const { zoom, panX, panY, annotations } = useAppStore.getState();
+        const [ix, iy] = screenToImage(e.offsetX, e.offsetY, zoom, panX, panY);
+
+        // Check for hit on existing annotation (reverse order = topmost first)
+        for (let i = annotations.length - 1; i >= 0; i--) {
+          if (pointInRect(ix, iy, annotations[i].bbox)) {
+            useAppStore.getState().setSelected(annotations[i].id);
+            return;
+          }
+        }
+
+        // No hit → deselect and start drawing
+        useAppStore.getState().setSelected(null);
+        drawingState.current = {
+          isDrawing: true,
+          startX: ix,
+          startY: iy,
+          currentX: ix,
+          currentY: iy,
+        };
+        canvas.setPointerCapture(e.pointerId);
+      }
     };
 
     const onPointerMove = (e: PointerEvent) => {
@@ -106,6 +161,16 @@ export function useCanvasInteraction(canvasRef: RefObject<HTMLCanvasElement | nu
         });
       }
 
+      // Drawing preview
+      if (drawingState.current.isDrawing) {
+        const { zoom, panX, panY } = useAppStore.getState();
+        const [ix, iy] = screenToImage(e.offsetX, e.offsetY, zoom, panX, panY);
+        drawingState.current.currentX = ix;
+        drawingState.current.currentY = iy;
+        requestRedraw();
+        return;
+      }
+
       // Pan delta
       if (!isPanning.current) return;
       const dx = e.clientX - panStart.current.x;
@@ -118,10 +183,41 @@ export function useCanvasInteraction(canvasRef: RefObject<HTMLCanvasElement | nu
       );
     };
 
-    const endPan = (e: PointerEvent) => {
-      if (!isPanning.current) return;
-      isPanning.current = false;
-      canvas.releasePointerCapture(e.pointerId);
+    const onPointerUp = (e: PointerEvent) => {
+      // End pan
+      if (isPanning.current) {
+        isPanning.current = false;
+        canvas.releasePointerCapture(e.pointerId);
+        canvas.style.cursor = spaceHeld.current ? 'grab' : 'crosshair';
+        return;
+      }
+
+      // End drawing
+      if (drawingState.current.isDrawing) {
+        const ds = drawingState.current;
+        ds.isDrawing = false;
+        canvas.releasePointerCapture(e.pointerId);
+
+        const { imageWidth, imageHeight } = useAppStore.getState();
+
+        // Normalize negative drags
+        const rawX = Math.min(ds.startX, ds.currentX);
+        const rawY = Math.min(ds.startY, ds.currentY);
+        const rawW = Math.abs(ds.currentX - ds.startX);
+        const rawH = Math.abs(ds.currentY - ds.startY);
+
+        // Clamp to image bounds
+        const x = Math.max(0, rawX);
+        const y = Math.max(0, rawY);
+        const w = Math.min(rawW, imageWidth - x);
+        const h = Math.min(rawH, imageHeight - y);
+
+        if (w >= MIN_BOX_SIZE && h >= MIN_BOX_SIZE) {
+          useAppStore.getState().addAnnotation([x, y, w, h]);
+        }
+
+        requestRedraw();
+      }
     };
 
     const onPointerLeave = () => {
@@ -130,21 +226,29 @@ export function useCanvasInteraction(canvasRef: RefObject<HTMLCanvasElement | nu
 
     // --- Space key tracking (for Space+drag pan) ---
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === ' ') spaceHeld.current = true;
+      if (e.key === ' ') {
+        spaceHeld.current = true;
+        if (!isPanning.current && !drawingState.current.isDrawing) {
+          canvas.style.cursor = 'grab';
+        }
+      }
     };
     const onKeyUp = (e: KeyboardEvent) => {
       if (e.key === ' ') {
         spaceHeld.current = false;
-        // Cancel any active space-pan when space is released
         isPanning.current = false;
+        canvas.style.cursor = 'crosshair';
       }
     };
+
+    // Set initial cursor
+    canvas.style.cursor = 'crosshair';
 
     canvas.addEventListener('wheel', onWheel, { passive: false });
     canvas.addEventListener('pointerdown', onPointerDown);
     canvas.addEventListener('pointermove', onPointerMove);
-    canvas.addEventListener('pointerup', endPan);
-    canvas.addEventListener('pointercancel', endPan);
+    canvas.addEventListener('pointerup', onPointerUp);
+    canvas.addEventListener('pointercancel', onPointerUp);
     canvas.addEventListener('pointerleave', onPointerLeave);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
@@ -153,13 +257,13 @@ export function useCanvasInteraction(canvasRef: RefObject<HTMLCanvasElement | nu
       canvas.removeEventListener('wheel', onWheel);
       canvas.removeEventListener('pointerdown', onPointerDown);
       canvas.removeEventListener('pointermove', onPointerMove);
-      canvas.removeEventListener('pointerup', endPan);
-      canvas.removeEventListener('pointercancel', endPan);
+      canvas.removeEventListener('pointerup', onPointerUp);
+      canvas.removeEventListener('pointercancel', onPointerUp);
       canvas.removeEventListener('pointerleave', onPointerLeave);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
     };
-  }, [canvasRef, applyZoom]);
+  }, [canvasRef, applyZoom, requestRedraw]);
 
-  return { zoomIn, zoomOut, resetView };
+  return { zoomIn, zoomOut, resetView, getDrawingState, cancelDrawing };
 }

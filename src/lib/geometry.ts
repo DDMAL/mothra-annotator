@@ -22,6 +22,15 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
+export function pointInRect(
+  ix: number,
+  iy: number,
+  bbox: [number, number, number, number],
+): boolean {
+  const [x, y, w, h] = bbox;
+  return ix >= x && ix <= x + w && iy >= y && iy <= y + h;
+}
+
 export function computeFitZoom(
   containerWidth: number,
   containerHeight: number,
