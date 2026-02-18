@@ -56,40 +56,6 @@ export function useCanvasInteraction(
     useAppStore.getState().setViewport(clamped, newPanX, newPanY);
   }, [canvasRef]);
 
-  // Canvas center in CSS pixels (for keyboard-driven zoom)
-  const canvasCenter = useCallback((): [number, number] => {
-    const canvas = canvasRef.current;
-    if (!canvas) return [0, 0];
-    const dpr = window.devicePixelRatio || 1;
-    return [canvas.width / dpr / 2, canvas.height / dpr / 2];
-  }, [canvasRef]);
-
-  const zoomIn = useCallback(() => {
-    const { zoom } = useAppStore.getState();
-    const [cx, cy] = canvasCenter();
-    applyZoom(zoom + ZOOM_STEP, cx, cy);
-  }, [applyZoom, canvasCenter]);
-
-  const zoomOut = useCallback(() => {
-    const { zoom } = useAppStore.getState();
-    const [cx, cy] = canvasCenter();
-    applyZoom(zoom - ZOOM_STEP, cx, cy);
-  }, [applyZoom, canvasCenter]);
-
-  const resetView = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const { imageWidth, imageHeight } = useAppStore.getState();
-    if (!imageWidth || !imageHeight) return;
-    const dpr = window.devicePixelRatio || 1;
-    const containerWidth = canvas.width / dpr;
-    const containerHeight = canvas.height / dpr;
-    const fitZoom = computeFitZoom(containerWidth, containerHeight, imageWidth, imageHeight);
-    const panX = (containerWidth - imageWidth * fitZoom) / 2;
-    const panY = (containerHeight - imageHeight * fitZoom) / 2;
-    useAppStore.getState().setViewport(fitZoom, panX, panY);
-  }, [canvasRef]);
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -265,5 +231,5 @@ export function useCanvasInteraction(
     };
   }, [canvasRef, applyZoom, requestRedraw]);
 
-  return { zoomIn, zoomOut, resetView, getDrawingState, cancelDrawing };
+  return { getDrawingState, cancelDrawing };
 }

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Annotation } from '../lib/types';
-import { CLASSES } from '../lib/constants';
+import { CLASSES, MIN_ZOOM, MAX_ZOOM, ZOOM_STEP } from '../lib/constants';
+import { clamp, computeFitZoom } from '../lib/geometry';
 
 interface AppState {
   // Annotation state
@@ -13,6 +14,10 @@ interface AppState {
   imageName: string | null;
   imageWidth: number;
   imageHeight: number;
+
+  // Canvas size (CSS pixels, updated by AnnotationCanvas on resize)
+  canvasWidth: number;
+  canvasHeight: number;
 
   // UI state
   boxOpacity: number;
@@ -36,7 +41,13 @@ interface AppState {
   setViewport: (zoom: number, panX: number, panY: number) => void;
   setCursorCoords: (coords: [number, number] | null) => void;
   setImageInfo: (name: string, width: number, height: number) => void;
+  setCanvasSize: (width: number, height: number) => void;
   restoreSession: (annotations: Annotation[]) => void;
+
+  // Zoom actions (usable from Toolbar, keyboard shortcuts, etc.)
+  zoomIn: () => void;
+  zoomOut: () => void;
+  resetView: () => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -49,6 +60,9 @@ export const useAppStore = create<AppState>((set) => ({
   imageName: null,
   imageWidth: 0,
   imageHeight: 0,
+
+  canvasWidth: 0,
+  canvasHeight: 0,
 
   boxOpacity: 0.3,
   showLabels: true,
@@ -110,5 +124,48 @@ export const useAppStore = create<AppState>((set) => ({
   setImageInfo: (name, width, height) =>
     set({ imageName: name, imageWidth: width, imageHeight: height }),
 
+  setCanvasSize: (width, height) => set({ canvasWidth: width, canvasHeight: height }),
+
   restoreSession: (annotations) => set({ annotations, undoStack: [], selectedId: null }),
+
+  zoomIn: () => {
+    const { zoom, panX, panY, canvasWidth, canvasHeight, imageWidth, imageHeight } =
+      useAppStore.getState();
+    const minZoom =
+      canvasWidth && imageWidth
+        ? computeFitZoom(canvasWidth, canvasHeight, imageWidth, imageHeight)
+        : MIN_ZOOM;
+    const newZoom = clamp(zoom + ZOOM_STEP, minZoom, MAX_ZOOM);
+    if (newZoom === zoom) return;
+    const cx = canvasWidth / 2;
+    const cy = canvasHeight / 2;
+    const newPanX = cx - (cx - panX) * (newZoom / zoom);
+    const newPanY = cy - (cy - panY) * (newZoom / zoom);
+    useAppStore.getState().setViewport(newZoom, newPanX, newPanY);
+  },
+
+  zoomOut: () => {
+    const { zoom, panX, panY, canvasWidth, canvasHeight, imageWidth, imageHeight } =
+      useAppStore.getState();
+    const minZoom =
+      canvasWidth && imageWidth
+        ? computeFitZoom(canvasWidth, canvasHeight, imageWidth, imageHeight)
+        : MIN_ZOOM;
+    const newZoom = clamp(zoom - ZOOM_STEP, minZoom, MAX_ZOOM);
+    if (newZoom === zoom) return;
+    const cx = canvasWidth / 2;
+    const cy = canvasHeight / 2;
+    const newPanX = cx - (cx - panX) * (newZoom / zoom);
+    const newPanY = cy - (cy - panY) * (newZoom / zoom);
+    useAppStore.getState().setViewport(newZoom, newPanX, newPanY);
+  },
+
+  resetView: () => {
+    const { canvasWidth, canvasHeight, imageWidth, imageHeight } = useAppStore.getState();
+    if (!canvasWidth || !imageWidth) return;
+    const fitZoom = computeFitZoom(canvasWidth, canvasHeight, imageWidth, imageHeight);
+    const panX = (canvasWidth - imageWidth * fitZoom) / 2;
+    const panY = (canvasHeight - imageHeight * fitZoom) / 2;
+    useAppStore.getState().setViewport(fitZoom, panX, panY);
+  },
 }));

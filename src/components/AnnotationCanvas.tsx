@@ -127,12 +127,12 @@ export default function AnnotationCanvas({ image }: AnnotationCanvasProps) {
     rafId.current = requestAnimationFrame(draw);
   }, [draw]);
 
-  const { zoomIn, zoomOut, resetView, getDrawingState, cancelDrawing } =
+  const { getDrawingState, cancelDrawing } =
     useCanvasInteraction(canvasRef, requestRedraw);
   useEffect(() => {
     getDrawingStateRef.current = getDrawingState;
   }, [getDrawingState]);
-  useKeyboardShortcuts({ zoomIn, zoomOut, resetView, cancelDrawing });
+  useKeyboardShortcuts({ cancelDrawing });
 
   const fitImageToCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -147,6 +147,8 @@ export default function AnnotationCanvas({ image }: AnnotationCanvasProps) {
     canvas.height = containerHeight * dpr;
     canvas.style.width = `${containerWidth}px`;
     canvas.style.height = `${containerHeight}px`;
+
+    useAppStore.getState().setCanvasSize(containerWidth, containerHeight);
 
     const fitZoom = computeFitZoom(containerWidth, containerHeight, image.naturalWidth, image.naturalHeight);
 

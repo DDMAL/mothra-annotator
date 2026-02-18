@@ -3,13 +3,10 @@ import { useAppStore } from '../store/useAppStore';
 import { CLASSES } from '../lib/constants';
 
 interface ShortcutActions {
-  zoomIn: () => void;
-  zoomOut: () => void;
-  resetView: () => void;
   cancelDrawing: () => void;
 }
 
-export function useKeyboardShortcuts({ zoomIn, zoomOut, resetView, cancelDrawing }: ShortcutActions) {
+export function useKeyboardShortcuts({ cancelDrawing }: ShortcutActions) {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       // Skip shortcuts when typing in input/textarea fields
@@ -27,15 +24,15 @@ export function useKeyboardShortcuts({ zoomIn, zoomOut, resetView, cancelDrawing
         case '+':
         case '=':
           e.preventDefault();
-          zoomIn();
+          useAppStore.getState().zoomIn();
           break;
         case '-':
           e.preventDefault();
-          zoomOut();
+          useAppStore.getState().zoomOut();
           break;
         case '0':
           e.preventDefault();
-          resetView();
+          useAppStore.getState().resetView();
           break;
         case '1':
         case '2':
@@ -62,5 +59,5 @@ export function useKeyboardShortcuts({ zoomIn, zoomOut, resetView, cancelDrawing
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [zoomIn, zoomOut, resetView, cancelDrawing]);
+  }, [cancelDrawing]);
 }
