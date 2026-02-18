@@ -1,5 +1,8 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { useAppStore } from '../store/useAppStore';
+import { computeFitZoom } from '../lib/geometry';
+import { useCanvasInteraction } from '../hooks/useCanvasInteraction';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 
 interface AnnotationCanvasProps {
   image: HTMLImageElement;
@@ -8,6 +11,9 @@ interface AnnotationCanvasProps {
 export default function AnnotationCanvas({ image }: AnnotationCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const { zoomIn, zoomOut, resetView } = useCanvasInteraction(canvasRef);
+  useKeyboardShortcuts({ zoomIn, zoomOut, resetView });
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -39,9 +45,7 @@ export default function AnnotationCanvas({ image }: AnnotationCanvasProps) {
     canvas.style.width = `${containerWidth}px`;
     canvas.style.height = `${containerHeight}px`;
 
-    const scaleX = containerWidth / image.naturalWidth;
-    const scaleY = containerHeight / image.naturalHeight;
-    const fitZoom = Math.min(scaleX, scaleY);
+    const fitZoom = computeFitZoom(containerWidth, containerHeight, image.naturalWidth, image.naturalHeight);
 
     const panX = (containerWidth - image.naturalWidth * fitZoom) / 2;
     const panY = (containerHeight - image.naturalHeight * fitZoom) / 2;

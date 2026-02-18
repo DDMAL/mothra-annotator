@@ -21,3 +21,12 @@ export function imageToScreen(
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
+
+export function computeFitZoom(
+  containerWidth: number,
+  containerHeight: number,
+  imageWidth: number,
+  imageHeight: number,
+): number {
+  return Math.min(containerWidth / imageWidth, containerHeight / imageHeight);
+}
