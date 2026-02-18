@@ -1,22 +1,52 @@
 import { useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { CLASSES } from '../lib/constants';
+import { toJSON } from '../lib/export';
 
 interface ShortcutActions {
   cancelDrawing: () => void;
+  isHelpOpen: boolean;
+  toggleHelp: () => void;
 }
 
-export function useKeyboardShortcuts({ cancelDrawing }: ShortcutActions) {
+function downloadJSON() {
+  const { annotations, imageName, imageWidth, imageHeight } = useAppStore.getState();
+  if (!imageName) return;
+  const session = { imageName, imageWidth, imageHeight, annotations };
+  const json = toJSON(session);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${imageName.replace(/\.[^.]+$/, '')}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function useKeyboardShortcuts({ cancelDrawing, isHelpOpen, toggleHelp }: ShortcutActions) {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       // Skip shortcuts when typing in input/textarea fields
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
 
+      // Ctrl/Cmd+S → quick-save JSON
+      if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        downloadJSON();
+        return;
+      }
+
       // Ctrl/Cmd+Z → undo
       if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         useAppStore.getState().undo();
+        return;
+      }
+
+      // ? → toggle help (requires shift on most keyboards)
+      if (e.key === '?') {
+        toggleHelp();
         return;
       }
 
@@ -50,14 +80,21 @@ export function useKeyboardShortcuts({ cancelDrawing }: ShortcutActions) {
           }
           break;
         }
+        case 'l':
+          useAppStore.getState().toggleLabels();
+          break;
         case 'Escape':
-          cancelDrawing();
-          useAppStore.getState().setSelected(null);
+          if (isHelpOpen) {
+            toggleHelp();
+          } else {
+            cancelDrawing();
+            useAppStore.getState().setSelected(null);
+          }
           break;
       }
     };
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [cancelDrawing]);
+  }, [cancelDrawing, isHelpOpen, toggleHelp]);
 }

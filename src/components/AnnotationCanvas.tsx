@@ -7,6 +7,8 @@ import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 
 interface AnnotationCanvasProps {
   image: HTMLImageElement;
+  isHelpOpen: boolean;
+  onToggleHelp: () => void;
 }
 
 function hexToRgba(hex: string, alpha: number): string {
@@ -24,7 +26,7 @@ function getClassName(classId: number): string {
   return CLASSES.find((c) => c.id === classId)?.name ?? 'unknown';
 }
 
-export default function AnnotationCanvas({ image }: AnnotationCanvasProps) {
+export default function AnnotationCanvas({ image, isHelpOpen, onToggleHelp }: AnnotationCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const rafId = useRef<number>(0);
@@ -132,7 +134,7 @@ export default function AnnotationCanvas({ image }: AnnotationCanvasProps) {
   useEffect(() => {
     getDrawingStateRef.current = getDrawingState;
   }, [getDrawingState]);
-  useKeyboardShortcuts({ cancelDrawing });
+  useKeyboardShortcuts({ cancelDrawing, isHelpOpen, toggleHelp: onToggleHelp });
 
   const fitImageToCanvas = useCallback(() => {
     const canvas = canvasRef.current;

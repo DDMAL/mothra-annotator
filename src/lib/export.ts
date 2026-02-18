@@ -1,8 +1,7 @@
 import type { AnnotationSession } from './types';
 
-export function toJSON(_session: AnnotationSession): string {
-  // TODO: Phase 8
-  return '';
+export function toJSON(session: AnnotationSession): string {
+  return JSON.stringify(session, null, 2);
 }
 
 export function toYOLO(_session: AnnotationSession): {

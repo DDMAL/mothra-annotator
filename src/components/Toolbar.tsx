@@ -1,7 +1,11 @@
 import { useAppStore } from '../store/useAppStore';
 import { CLASSES } from '../lib/constants';
 
-export default function Toolbar() {
+interface ToolbarProps {
+  onToggleHelp: () => void;
+}
+
+export default function Toolbar({ onToggleHelp }: ToolbarProps) {
   const activeClassId = useAppStore((s) => s.activeClassId);
   const zoom = useAppStore((s) => s.zoom);
   const boxOpacity = useAppStore((s) => s.boxOpacity);
@@ -137,6 +141,18 @@ export default function Toolbar() {
         aria-label="Clear all annotations"
       >
         Clear All
+      </button>
+
+      {/* Divider */}
+      <div className="w-px h-6 bg-gray-200 mx-2" />
+
+      {/* Help */}
+      <button
+        onClick={onToggleHelp}
+        className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 font-medium text-sm"
+        aria-label="Keyboard shortcuts help"
+      >
+        ?
       </button>
     </div>
   );
