@@ -107,11 +107,12 @@ export function useCanvasInteraction(
 
       // Left-click (no modifier) → select or start drawing
       if (e.button === 0 && !e.ctrlKey && !e.metaKey) {
-        const { zoom, panX, panY, annotations } = useAppStore.getState();
+        const { zoom, panX, panY, annotations, hiddenClassIds } = useAppStore.getState();
         const [ix, iy] = screenToImage(e.offsetX, e.offsetY, zoom, panX, panY);
 
         // Check for hit on existing annotation (reverse order = topmost first)
         for (let i = annotations.length - 1; i >= 0; i--) {
+          if (hiddenClassIds.has(annotations[i].classId)) continue;
           if (pointInRect(ix, iy, annotations[i].bbox)) {
             useAppStore.getState().setSelected(annotations[i].id);
             return;

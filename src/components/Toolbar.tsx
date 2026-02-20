@@ -11,13 +11,19 @@ export default function Toolbar({ onToggleHelp }: ToolbarProps) {
   const boxOpacity = useAppStore((s) => s.boxOpacity);
   const showLabels = useAppStore((s) => s.showLabels);
 
+  const hiddenClassIds = useAppStore((s) => s.hiddenClassIds);
+
   const setActiveClass = useAppStore((s) => s.setActiveClass);
   const zoomIn = useAppStore((s) => s.zoomIn);
   const zoomOut = useAppStore((s) => s.zoomOut);
   const resetView = useAppStore((s) => s.resetView);
   const setOpacity = useAppStore((s) => s.setOpacity);
   const toggleLabels = useAppStore((s) => s.toggleLabels);
+  const toggleClassVisibility = useAppStore((s) => s.toggleClassVisibility);
+  const toggleAllClassVisibility = useAppStore((s) => s.toggleAllClassVisibility);
   const clearAll = useAppStore((s) => s.clearAll);
+
+  const allVisible = hiddenClassIds.size === 0;
 
   return (
     <div className="h-12 bg-white border-b border-gray-200 flex items-center px-4 gap-1 text-sm select-none">
@@ -46,6 +52,56 @@ export default function Toolbar({ onToggleHelp }: ToolbarProps) {
             <kbd className="text-[10px] text-gray-400 bg-gray-100 px-1 rounded">{cls.shortcut}</kbd>
           </button>
         ))}
+      </div>
+
+      {/* Divider */}
+      <div className="w-px h-6 bg-gray-200 mx-2" />
+
+      {/* Visibility toggles */}
+      <div className="flex items-center gap-1">
+        <button
+          onClick={toggleAllClassVisibility}
+          className={`flex items-center gap-1.5 px-2 py-1 text-xs rounded transition-colors ${
+            allVisible ? 'bg-gray-100 text-gray-800' : 'text-gray-500 hover:bg-gray-50'
+          }`}
+          aria-label={allVisible ? 'Hide all classes' : 'Show all classes'}
+          title={allVisible ? 'Hide all' : 'Show all'}
+        >
+          <span
+            className={`w-3 h-3 rounded border flex items-center justify-center text-[8px] ${
+              allVisible ? 'bg-gray-600 border-gray-600 text-white' : 'border-gray-400'
+            }`}
+          >
+            {allVisible ? '✓' : ''}
+          </span>
+          All
+        </button>
+        {CLASSES.map((cls) => {
+          const isVisible = !hiddenClassIds.has(cls.id);
+          return (
+            <button
+              key={cls.id}
+              onClick={() => toggleClassVisibility(cls.id)}
+              className={`flex items-center gap-1.5 px-2 py-1 text-xs rounded transition-colors ${
+                isVisible ? 'bg-gray-100 text-gray-800' : 'text-gray-500 hover:bg-gray-50'
+              }`}
+              aria-label={`${isVisible ? 'Hide' : 'Show'} ${cls.name} annotations`}
+              title={`${isVisible ? 'Hide' : 'Show'} ${cls.name}`}
+            >
+              <span
+                className={`w-3 h-3 rounded border flex items-center justify-center text-[8px]`}
+                style={{
+                  backgroundColor: isVisible ? cls.color : undefined,
+                  borderColor: cls.color,
+                  color: isVisible ? 'white' : 'transparent',
+                }}
+              >
+                {isVisible ? '✓' : ''}
+              </span>
+              <span className="capitalize">{cls.name}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Divider */}

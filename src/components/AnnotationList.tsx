@@ -18,6 +18,7 @@ function formatTimestamp(iso: string): string {
 export default function AnnotationList() {
   const annotations = useAppStore((s) => s.annotations);
   const selectedId = useAppStore((s) => s.selectedId);
+  const hiddenClassIds = useAppStore((s) => s.hiddenClassIds);
   const setSelected = useAppStore((s) => s.setSelected);
   const deleteAnnotation = useAppStore((s) => s.deleteAnnotation);
   const listRef = useRef<HTMLDivElement>(null);
@@ -67,6 +68,7 @@ export default function AnnotationList() {
           sorted.map((ann) => {
             const color = getClassColor(ann.classId);
             const isSelected = ann.id === selectedId;
+            const isHidden = hiddenClassIds.has(ann.classId);
             return (
               <div
                 key={ann.id}
@@ -74,7 +76,7 @@ export default function AnnotationList() {
                 onClick={() => setSelected(ann.id)}
                 className={`px-3 py-2 cursor-pointer border-b border-gray-100 flex items-start gap-2 hover:bg-gray-50 ${
                   isSelected ? 'bg-blue-50 ring-1 ring-inset ring-blue-200' : ''
-                }`}
+                } ${isHidden ? 'opacity-40' : ''}`}
               >
                 {/* Color dot */}
                 <span

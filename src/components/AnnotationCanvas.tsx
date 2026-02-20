@@ -49,7 +49,7 @@ export default function AnnotationCanvas({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const { zoom, panX, panY, annotations, boxOpacity, showLabels, selectedId, activeClassId } =
+    const { zoom, panX, panY, annotations, boxOpacity, showLabels, hiddenClassIds, selectedId, activeClassId } =
       useAppStore.getState();
     const dpr = window.devicePixelRatio || 1;
 
@@ -63,8 +63,9 @@ export default function AnnotationCanvas({
     // Draw image
     ctx.drawImage(image, 0, 0);
 
-    // Draw annotations
+    // Draw annotations (skip hidden classes)
     for (const ann of annotations) {
+      if (hiddenClassIds.has(ann.classId)) continue;
       const [x, y, w, h] = ann.bbox;
       const color = getClassColor(ann.classId);
       const isSelected = ann.id === selectedId;
@@ -197,7 +198,8 @@ export default function AnnotationCanvas({
         state.selectedId !== prevState.selectedId ||
         state.boxOpacity !== prevState.boxOpacity ||
         state.showLabels !== prevState.showLabels ||
-        state.activeClassId !== prevState.activeClassId
+        state.activeClassId !== prevState.activeClassId ||
+        state.hiddenClassIds !== prevState.hiddenClassIds
       ) {
         requestRedraw();
       }

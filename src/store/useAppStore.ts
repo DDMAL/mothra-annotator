@@ -22,6 +22,7 @@ interface AppState {
   // UI state
   boxOpacity: number;
   showLabels: boolean;
+  hiddenClassIds: Set<number>;
   lastSaved: number | null;
 
   // Viewport state
@@ -39,6 +40,8 @@ interface AppState {
   clearAll: () => void;
   setOpacity: (value: number) => void;
   toggleLabels: () => void;
+  toggleClassVisibility: (classId: number) => void;
+  toggleAllClassVisibility: () => void;
   setViewport: (zoom: number, panX: number, panY: number) => void;
   setCursorCoords: (coords: [number, number] | null) => void;
   setImageInfo: (name: string, width: number, height: number) => void;
@@ -68,6 +71,7 @@ export const useAppStore = create<AppState>((set) => ({
 
   boxOpacity: 0.3,
   showLabels: true,
+  hiddenClassIds: new Set(),
   lastSaved: null,
 
   zoom: 1,
@@ -119,6 +123,20 @@ export const useAppStore = create<AppState>((set) => ({
   setOpacity: (value) => set({ boxOpacity: value }),
 
   toggleLabels: () => set((state) => ({ showLabels: !state.showLabels })),
+
+  toggleClassVisibility: (classId) =>
+    set((state) => {
+      const next = new Set(state.hiddenClassIds);
+      if (next.has(classId)) next.delete(classId);
+      else next.add(classId);
+      return { hiddenClassIds: next };
+    }),
+
+  toggleAllClassVisibility: () =>
+    set((state) => {
+      if (state.hiddenClassIds.size > 0) return { hiddenClassIds: new Set() };
+      return { hiddenClassIds: new Set(CLASSES.map((c) => c.id)) };
+    }),
 
   setViewport: (zoom, panX, panY) => set({ zoom, panX, panY }),
 
