@@ -69,13 +69,24 @@ export function useCanvasInteraction(
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // --- Ctrl+Wheel zoom ---
+    // --- Wheel: zoom / scroll ---
     const onWheel = (e: WheelEvent) => {
-      if (!e.ctrlKey && !e.metaKey) return;
-      e.preventDefault();
-      const { zoom } = useAppStore.getState();
-      const delta = e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP;
-      applyZoom(zoom + delta, e.offsetX, e.offsetY);
+      e.stopPropagation();
+      const { zoom, panX, panY } = useAppStore.getState();
+
+      if (e.ctrlKey || e.metaKey) {
+        // Zoom toward cursor — must prevent browser zoom
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP;
+        applyZoom(zoom + delta, e.offsetX, e.offsetY);
+      } else if (e.shiftKey) {
+        // Horizontal pan
+        const d = e.deltaX || e.deltaY;
+        useAppStore.getState().setViewport(zoom, panX - d, panY);
+      } else {
+        // Vertical pan
+        useAppStore.getState().setViewport(zoom, panX, panY - e.deltaY);
+      }
     };
 
     // --- Pointer down: pan, select, or start drawing ---

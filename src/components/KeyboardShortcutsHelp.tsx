@@ -33,6 +33,8 @@ const SHORTCUT_GROUPS: { title: string; shortcuts: Shortcut[] }[] = [
       { keys: ['+'], altKeys: ['='], description: 'Zoom in' },
       { keys: ['-'], description: 'Zoom out' },
       { keys: ['0'], description: 'Fit to view' },
+      { keys: ['Scroll'], description: 'Scroll vertically' },
+      { keys: ['Shift + Scroll'], description: 'Scroll horizontally' },
       { keys: ['Ctrl/Cmd + Scroll'], description: 'Zoom to cursor' },
       { keys: ['Space + Drag'], description: 'Pan' },
       { keys: ['Middle Click + Drag'], description: 'Pan' },
