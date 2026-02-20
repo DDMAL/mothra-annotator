@@ -156,9 +156,7 @@ export const useAppStore = create<AppState>((set) => ({
   moveAnnotation: (id, newBbox) =>
     set((state) => ({
       undoStack: [...state.undoStack, state.annotations],
-      annotations: state.annotations.map((a) =>
-        a.id === id ? { ...a, bbox: newBbox } : a
-      ),
+      annotations: state.annotations.map((a) => (a.id === id ? { ...a, bbox: newBbox } : a)),
     })),
 
   setImageInfo: (name, width, height) =>

@@ -16,7 +16,12 @@ function quickSaveJSON() {
   downloadJSON({ imageName, imageWidth, imageHeight, annotations });
 }
 
-export function useKeyboardShortcuts({ cancelDrawing, cancelDrag, isHelpOpen, toggleHelp }: ShortcutActions) {
+export function useKeyboardShortcuts({
+  cancelDrawing,
+  cancelDrag,
+  isHelpOpen,
+  toggleHelp,
+}: ShortcutActions) {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       // Skip shortcuts when typing in input/textarea fields

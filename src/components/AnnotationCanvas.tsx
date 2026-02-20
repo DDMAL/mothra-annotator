@@ -27,7 +27,6 @@ function getClassName(classId: number): string {
   return CLASSES.find((c) => c.id === classId)?.name ?? 'unknown';
 }
 
-
 export default function AnnotationCanvas({
   image,
   isHelpOpen,
@@ -57,8 +56,18 @@ export default function AnnotationCanvas({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const { zoom, panX, panY, annotations, boxOpacity, showLabels, hiddenClassIds, selectedId, activeClassId, editMode } =
-      useAppStore.getState();
+    const {
+      zoom,
+      panX,
+      panY,
+      annotations,
+      boxOpacity,
+      showLabels,
+      hiddenClassIds,
+      selectedId,
+      activeClassId,
+      editMode,
+    } = useAppStore.getState();
     const dpr = window.devicePixelRatio || 1;
 
     // Clear
@@ -110,10 +119,14 @@ export default function AnnotationCanvas({
       if (isSelected && editMode === 'select') {
         // Draw handles in screen space for consistent pixel size
         const handlePositions: [number, number][] = [
-          [x, y],           [x + w, y],
-          [x, y + h],       [x + w, y + h],
-          [x + w / 2, y],   [x + w / 2, y + h],
-          [x, y + h / 2],   [x + w, y + h / 2],
+          [x, y],
+          [x + w, y],
+          [x, y + h],
+          [x + w, y + h],
+          [x + w / 2, y],
+          [x + w / 2, y + h],
+          [x, y + h / 2],
+          [x + w, y + h / 2],
         ];
 
         ctx.save();
@@ -180,7 +193,10 @@ export default function AnnotationCanvas({
     rafId.current = requestAnimationFrame(draw);
   }, [draw]);
 
-  const { getDrawingState, getDragState, cancelDrawing, cancelDrag } = useCanvasInteraction(canvasRef, requestRedraw);
+  const { getDrawingState, getDragState, cancelDrawing, cancelDrag } = useCanvasInteraction(
+    canvasRef,
+    requestRedraw,
+  );
   useEffect(() => {
     getDrawingStateRef.current = getDrawingState;
     getDragStateRef.current = getDragState;

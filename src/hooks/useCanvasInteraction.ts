@@ -13,7 +13,6 @@ export interface DrawingState {
   currentY: number;
 }
 
-
 function hitTestHandle(
   ix: number,
   iy: number,
