@@ -1,9 +1,9 @@
 import type { AnnotationClass } from './types';
 
 export const CLASSES: AnnotationClass[] = [
-  { id: 1, name: 'text', color: '#3B82F6', shortcut: '1' },
-  { id: 2, name: 'music', color: '#EF4444', shortcut: '2' },
-  { id: 3, name: 'staves', color: '#10B981', shortcut: '3' },
+  { id: 1, name: 'text', color: '#5B8FA3', shortcut: '1' },
+  { id: 2, name: 'music', color: '#7A9B5F', shortcut: '2' },
+  { id: 3, name: 'staves', color: '#B8860B', shortcut: '3' },
 ];
 
 export const MIN_ZOOM = 0.25;
