@@ -1,73 +1,42 @@
-# React + TypeScript + Vite
+# Mothra Annotator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A browser-based image annotation tool for creating bounding box annotations on document images. Built for annotating text, music, and staves regions in scanned documents and sheet music.
 
-Currently, two official plugins are available:
+**Live demo:** [https://ddmal.ca/mothra-annotator/](https://ddmal.ca/mothra-annotator/)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Key Features
 
-## React Compiler
+- **Bounding box annotation** — Draw, move, and resize bounding boxes directly on images
+- **Three annotation classes** — Text, Music, and Staves, each with a distinct color and keyboard shortcut (`1`, `2`, `3`)
+- **Draw and Select modes** — Switch between creating new boxes (`D`) and selecting/editing existing ones (`V`)
+- **Resize handles** — 8-handle hit testing for precise box adjustments
+- **Zoom and pan** — Scroll to pan, Shift+Scroll to zoom, or use `+`/`-` keys; press `0` to reset view
+- **Class filter toggles** — Show or hide annotations by class
+- **Label visibility toggle** — Press `L` to show/hide annotation labels
+- **Undo support** — `Ctrl/Cmd+Z` to undo actions
+- **Auto-save** — Annotations persist to localStorage automatically
+- **Export formats** — Export as JSON (full session) or YOLO (normalized center-format with 0-indexed class IDs), with ZIP support for batch export
+- **Import** — Load previously exported JSON annotations
+- **Quick save** — `Ctrl/Cmd+S` to download annotations as JSON
+- **Keyboard-driven workflow** — Shortcuts for class selection, mode switching, deletion (`Delete`/`Backspace`), and more
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+React 19, TypeScript, Vite 7, Tailwind CSS 4, Zustand
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Getting Started
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Scripts
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x';
-import reactDom from 'eslint-plugin-react-dom';
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
-```
+| Command              | Description                              |
+| -------------------- | ---------------------------------------- |
+| `npm run dev`        | Start Vite dev server with HMR           |
+| `npm run build`      | Type-check and build for production      |
+| `npm run lint`       | Run ESLint                               |
+| `npm run format`     | Format with Prettier                     |
+| `npm run deploy`     | Build and deploy to GitHub Pages         |
