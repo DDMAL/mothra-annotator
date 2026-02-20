@@ -11,6 +11,13 @@ interface Shortcut {
 
 const SHORTCUT_GROUPS: { title: string; shortcuts: Shortcut[] }[] = [
   {
+    title: 'Modes',
+    shortcuts: [
+      { keys: ['D'], description: 'Draw mode' },
+      { keys: ['V'], description: 'Select mode' },
+    ],
+  },
+  {
     title: 'Classes',
     shortcuts: [
       { keys: ['1'], description: 'Select text class' },

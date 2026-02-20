@@ -10,6 +10,8 @@ export default function Toolbar({ onToggleHelp }: ToolbarProps) {
   const zoom = useAppStore((s) => s.zoom);
   const boxOpacity = useAppStore((s) => s.boxOpacity);
   const showLabels = useAppStore((s) => s.showLabels);
+  const editMode = useAppStore((s) => s.editMode);
+  const setEditMode = useAppStore((s) => s.setEditMode);
 
   const hiddenClassIds = useAppStore((s) => s.hiddenClassIds);
 
@@ -23,10 +25,42 @@ export default function Toolbar({ onToggleHelp }: ToolbarProps) {
   const toggleAllClassVisibility = useAppStore((s) => s.toggleAllClassVisibility);
   const clearAll = useAppStore((s) => s.clearAll);
 
+  const isIdle = editMode === 'idle';
   const allVisible = hiddenClassIds.size === 0;
 
   return (
-    <div className="h-12 bg-white border-b border-gray-200 flex items-center px-4 gap-1 text-sm select-none">
+    <div className={`h-12 bg-white border-b border-gray-200 flex items-center px-4 gap-1 text-sm select-none ${isIdle ? 'pointer-events-none opacity-40' : ''}`}>
+      {/* Mode switch */}
+      <div className="flex items-center rounded-md bg-gray-100 p-0.5">
+        <button
+          onClick={() => setEditMode('draw')}
+          className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+            editMode === 'draw'
+              ? 'bg-gray-700 text-white shadow-sm'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+          aria-label="Drawing mode (D)"
+          title="Draw annotations (D)"
+        >
+          Draw
+        </button>
+        <button
+          onClick={() => setEditMode('select')}
+          className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+            editMode === 'select'
+              ? 'bg-gray-700 text-white shadow-sm'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+          aria-label="Selecting mode (V)"
+          title="Select & move annotations (V)"
+        >
+          Select
+        </button>
+      </div>
+
+      {/* Divider */}
+      <div className="w-px h-6 bg-gray-200 mx-2" />
+
       {/* Class selector */}
       <div className="flex items-center gap-1">
         {CLASSES.map((cls) => (

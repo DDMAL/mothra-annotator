@@ -24,3 +24,14 @@ export interface ViewportState {
   panX: number;
   panY: number;
 }
+
+export type EditMode = 'idle' | 'draw' | 'select';
+
+export type DragHandle = 'body' | 'nw' | 'ne' | 'sw' | 'se' | 'n' | 's' | 'e' | 'w';
+
+export interface DragState {
+  active: boolean;
+  annotationId: string | null;
+  handle: DragHandle;
+  previewBbox: [number, number, number, number] | null; // preview bbox during drag
+}

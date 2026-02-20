@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Annotation } from '../lib/types';
+import type { Annotation, EditMode } from '../lib/types';
 import { CLASSES, MIN_ZOOM, MAX_ZOOM, ZOOM_STEP } from '../lib/constants';
 import { clamp, computeFitZoom } from '../lib/geometry';
 
@@ -18,6 +18,9 @@ interface AppState {
   // Canvas size (CSS pixels, updated by AnnotationCanvas on resize)
   canvasWidth: number;
   canvasHeight: number;
+
+  // Edit mode
+  editMode: EditMode;
 
   // UI state
   boxOpacity: number;
@@ -49,6 +52,10 @@ interface AppState {
   restoreSession: (annotations: Annotation[]) => void;
   setLastSaved: (timestamp: number) => void;
 
+  // Edit mode actions
+  setEditMode: (mode: EditMode) => void;
+  moveAnnotation: (id: string, newBbox: [number, number, number, number]) => void;
+
   // Zoom actions (usable from Toolbar, keyboard shortcuts, etc.)
   zoomIn: () => void;
   zoomOut: () => void;
@@ -61,6 +68,8 @@ export const useAppStore = create<AppState>((set) => ({
   activeClassId: CLASSES[0].id,
   selectedId: null,
   undoStack: [],
+
+  editMode: 'idle',
 
   imageName: null,
   imageWidth: 0,
@@ -142,8 +151,18 @@ export const useAppStore = create<AppState>((set) => ({
 
   setCursorCoords: (coords) => set({ cursorImageCoords: coords }),
 
+  setEditMode: (mode) => set({ editMode: mode }),
+
+  moveAnnotation: (id, newBbox) =>
+    set((state) => ({
+      undoStack: [...state.undoStack, state.annotations],
+      annotations: state.annotations.map((a) =>
+        a.id === id ? { ...a, bbox: newBbox } : a
+      ),
+    })),
+
   setImageInfo: (name, width, height) =>
-    set({ imageName: name, imageWidth: width, imageHeight: height }),
+    set({ imageName: name, imageWidth: width, imageHeight: height, editMode: 'draw' }),
 
   setCanvasSize: (width, height) => set({ canvasWidth: width, canvasHeight: height }),
 

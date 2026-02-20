@@ -1,9 +1,10 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { computeFitZoom } from '../lib/geometry';
-import { CLASSES } from '../lib/constants';
+import { CLASSES, HANDLE_HALFSIZE_PX } from '../lib/constants';
 import { useCanvasInteraction, type DrawingState } from '../hooks/useCanvasInteraction';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import type { DragState } from '../lib/types';
 
 interface AnnotationCanvasProps {
   image: HTMLImageElement;
@@ -26,6 +27,7 @@ function getClassName(classId: number): string {
   return CLASSES.find((c) => c.id === classId)?.name ?? 'unknown';
 }
 
+
 export default function AnnotationCanvas({
   image,
   isHelpOpen,
@@ -34,13 +36,19 @@ export default function AnnotationCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const rafId = useRef<number>(0);
-  // Getter function ref — populated after useCanvasInteraction initializes
+  // Getter function refs — populated after useCanvasInteraction initializes
   const getDrawingStateRef = useRef<() => DrawingState>(() => ({
     isDrawing: false,
     startX: 0,
     startY: 0,
     currentX: 0,
     currentY: 0,
+  }));
+  const getDragStateRef = useRef<() => DragState>(() => ({
+    active: false,
+    annotationId: null,
+    handle: 'body',
+    previewBbox: null,
   }));
 
   const draw = useCallback(() => {
@@ -49,7 +57,7 @@ export default function AnnotationCanvas({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const { zoom, panX, panY, annotations, boxOpacity, showLabels, hiddenClassIds, selectedId, activeClassId } =
+    const { zoom, panX, panY, annotations, boxOpacity, showLabels, hiddenClassIds, selectedId, activeClassId, editMode } =
       useAppStore.getState();
     const dpr = window.devicePixelRatio || 1;
 
@@ -63,10 +71,19 @@ export default function AnnotationCanvas({
     // Draw image
     ctx.drawImage(image, 0, 0);
 
+    const dragS = getDragStateRef.current();
+
     // Draw annotations (skip hidden classes)
     for (const ann of annotations) {
       if (hiddenClassIds.has(ann.classId)) continue;
-      const [x, y, w, h] = ann.bbox;
+
+      let [x, y, w, h] = ann.bbox;
+
+      // Apply drag/resize preview for the annotation being manipulated
+      if (dragS.active && ann.id === dragS.annotationId && dragS.previewBbox) {
+        [x, y, w, h] = dragS.previewBbox;
+      }
+
       const color = getClassColor(ann.classId);
       const isSelected = ann.id === selectedId;
 
@@ -87,6 +104,33 @@ export default function AnnotationCanvas({
         ctx.setLineDash([6 / zoom, 4 / zoom]);
         ctx.strokeRect(x, y, w, h);
         ctx.setLineDash([]);
+      }
+
+      // Resize handles on selected annotation in select mode
+      if (isSelected && editMode === 'select') {
+        // Draw handles in screen space for consistent pixel size
+        const handlePositions: [number, number][] = [
+          [x, y],           [x + w, y],
+          [x, y + h],       [x + w, y + h],
+          [x + w / 2, y],   [x + w / 2, y + h],
+          [x, y + h / 2],   [x + w, y + h / 2],
+        ];
+
+        ctx.save();
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const hs = HANDLE_HALFSIZE_PX * Math.max(1, zoom);
+        for (const [hx, hy] of handlePositions) {
+          const sx = hx * zoom + panX;
+          const sy = hy * zoom + panY;
+          ctx.fillStyle = 'white';
+          ctx.fillRect(sx - hs, sy - hs, hs * 2, hs * 2);
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(sx - hs, sy - hs, hs * 2, hs * 2);
+        }
+
+        ctx.restore();
       }
 
       // Label
@@ -136,11 +180,12 @@ export default function AnnotationCanvas({
     rafId.current = requestAnimationFrame(draw);
   }, [draw]);
 
-  const { getDrawingState, cancelDrawing } = useCanvasInteraction(canvasRef, requestRedraw);
+  const { getDrawingState, getDragState, cancelDrawing, cancelDrag } = useCanvasInteraction(canvasRef, requestRedraw);
   useEffect(() => {
     getDrawingStateRef.current = getDrawingState;
-  }, [getDrawingState]);
-  useKeyboardShortcuts({ cancelDrawing, isHelpOpen, toggleHelp: onToggleHelp });
+    getDragStateRef.current = getDragState;
+  }, [getDrawingState, getDragState]);
+  useKeyboardShortcuts({ cancelDrawing, cancelDrag, isHelpOpen, toggleHelp: onToggleHelp });
 
   const fitImageToCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -199,13 +244,22 @@ export default function AnnotationCanvas({
         state.boxOpacity !== prevState.boxOpacity ||
         state.showLabels !== prevState.showLabels ||
         state.activeClassId !== prevState.activeClassId ||
-        state.hiddenClassIds !== prevState.hiddenClassIds
+        state.hiddenClassIds !== prevState.hiddenClassIds ||
+        state.editMode !== prevState.editMode
       ) {
         requestRedraw();
       }
     });
     return unsub;
   }, [requestRedraw]);
+
+  // Update cursor when editMode changes
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const { editMode } = useAppStore.getState();
+    canvas.style.cursor = editMode === 'draw' ? 'crosshair' : 'default';
+  });
 
   return (
     <div ref={containerRef} className="flex-1 relative overflow-hidden bg-gray-100">

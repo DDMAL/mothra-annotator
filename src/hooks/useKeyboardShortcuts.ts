@@ -5,6 +5,7 @@ import { downloadJSON } from '../lib/export';
 
 interface ShortcutActions {
   cancelDrawing: () => void;
+  cancelDrag: () => void;
   isHelpOpen: boolean;
   toggleHelp: () => void;
 }
@@ -15,7 +16,7 @@ function quickSaveJSON() {
   downloadJSON({ imageName, imageWidth, imageHeight, annotations });
 }
 
-export function useKeyboardShortcuts({ cancelDrawing, isHelpOpen, toggleHelp }: ShortcutActions) {
+export function useKeyboardShortcuts({ cancelDrawing, cancelDrag, isHelpOpen, toggleHelp }: ShortcutActions) {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       // Skip shortcuts when typing in input/textarea fields
@@ -72,6 +73,24 @@ export function useKeyboardShortcuts({ cancelDrawing, isHelpOpen, toggleHelp }: 
           }
           break;
         }
+        case 'd':
+        case 'D': {
+          const { editMode } = useAppStore.getState();
+          if (editMode !== 'idle') {
+            cancelDrag();
+            useAppStore.getState().setEditMode('draw');
+          }
+          break;
+        }
+        case 'v':
+        case 'V': {
+          const { editMode } = useAppStore.getState();
+          if (editMode !== 'idle') {
+            cancelDrawing();
+            useAppStore.getState().setEditMode('select');
+          }
+          break;
+        }
         case 'l':
           useAppStore.getState().toggleLabels();
           break;
@@ -80,6 +99,7 @@ export function useKeyboardShortcuts({ cancelDrawing, isHelpOpen, toggleHelp }: 
             toggleHelp();
           } else {
             cancelDrawing();
+            cancelDrag();
             useAppStore.getState().setSelected(null);
           }
           break;
@@ -88,5 +108,5 @@ export function useKeyboardShortcuts({ cancelDrawing, isHelpOpen, toggleHelp }: 
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [cancelDrawing, isHelpOpen, toggleHelp]);
+  }, [cancelDrawing, cancelDrag, isHelpOpen, toggleHelp]);
 }
