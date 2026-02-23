@@ -265,17 +265,15 @@ export default function AnnotationCanvas({
       ) {
         requestRedraw();
       }
+      if (state.editMode !== prevState.editMode) {
+        const canvas = canvasRef.current;
+        if (canvas) {
+          canvas.style.cursor = state.editMode === 'draw' ? 'crosshair' : 'default';
+        }
+      }
     });
     return unsub;
   }, [requestRedraw]);
-
-  // Update cursor when editMode changes
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const { editMode } = useAppStore.getState();
-    canvas.style.cursor = editMode === 'draw' ? 'crosshair' : 'default';
-  });
 
   return (
     <div ref={containerRef} className="flex-1 relative overflow-hidden bg-gray-100">
