@@ -33,10 +33,10 @@ npm run dev
 
 ## Scripts
 
-| Command              | Description                              |
-| -------------------- | ---------------------------------------- |
-| `npm run dev`        | Start Vite dev server with HMR           |
-| `npm run build`      | Type-check and build for production      |
-| `npm run lint`       | Run ESLint                               |
-| `npm run format`     | Format with Prettier                     |
-| `npm run deploy`     | Build and deploy to GitHub Pages         |
+| Command          | Description                         |
+| ---------------- | ----------------------------------- |
+| `npm run dev`    | Start Vite dev server with HMR      |
+| `npm run build`  | Type-check and build for production |
+| `npm run lint`   | Run ESLint                          |
+| `npm run format` | Format with Prettier                |
+| `npm run deploy` | Build and deploy to GitHub Pages    |
