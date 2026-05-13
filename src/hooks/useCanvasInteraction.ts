@@ -308,7 +308,13 @@ export function useCanvasInteraction(
           }
 
           // No hit → start marquee selection
-          marqueeState.current = { active: true, startX: ix, startY: iy, currentX: ix, currentY: iy };
+          marqueeState.current = {
+            active: true,
+            startX: ix,
+            startY: iy,
+            currentX: ix,
+            currentY: iy,
+          };
           canvas.setPointerCapture(e.pointerId);
           requestRedraw();
         }
@@ -432,7 +438,9 @@ export function useCanvasInteraction(
         if (mw > 2 && mh > 2) {
           const { annotations, hiddenClassIds } = useAppStore.getState();
           const hit = annotations
-            .filter((a) => !hiddenClassIds.has(a.classId) && rectsIntersect([mx, my, mw, mh], a.bbox))
+            .filter(
+              (a) => !hiddenClassIds.has(a.classId) && rectsIntersect([mx, my, mw, mh], a.bbox),
+            )
             .map((a) => a.id);
           useAppStore.getState().setSelectedIds(hit);
         } else {
