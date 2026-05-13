@@ -31,6 +31,13 @@ export function pointInRect(
   return ix >= x && ix <= x + w && iy >= y && iy <= y + h;
 }
 
+export function rectsIntersect(
+  a: [number, number, number, number],
+  b: [number, number, number, number],
+): boolean {
+  return a[0] < b[0] + b[2] && a[0] + a[2] > b[0] && a[1] < b[1] + b[3] && a[1] + a[3] > b[1];
+}
+
 export function computeFitZoom(
   containerWidth: number,
   containerHeight: number,

@@ -17,18 +17,18 @@ function formatTimestamp(iso: string): string {
 
 export default function AnnotationList() {
   const annotations = useAppStore((s) => s.annotations);
-  const selectedId = useAppStore((s) => s.selectedId);
+  const selectedIds = useAppStore((s) => s.selectedIds);
   const hiddenClassIds = useAppStore((s) => s.hiddenClassIds);
   const setSelected = useAppStore((s) => s.setSelected);
   const deleteAnnotation = useAppStore((s) => s.deleteAnnotation);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll selected row into view
+  // Auto-scroll selected row into view (only for single selection)
   useEffect(() => {
-    if (!selectedId || !listRef.current) return;
-    const row = listRef.current.querySelector(`[data-id="${selectedId}"]`);
+    if (selectedIds.length !== 1 || !listRef.current) return;
+    const row = listRef.current.querySelector(`[data-id="${selectedIds[0]}"]`);
     row?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }, [selectedId]);
+  }, [selectedIds]);
 
   // Sort newest first
   const sorted = [...annotations].sort(
@@ -67,7 +67,7 @@ export default function AnnotationList() {
         ) : (
           sorted.map((ann) => {
             const color = getClassColor(ann.classId);
-            const isSelected = ann.id === selectedId;
+            const isSelected = selectedIds.includes(ann.id);
             const isHidden = hiddenClassIds.has(ann.classId);
             return (
               <div

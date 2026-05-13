@@ -71,10 +71,10 @@ export function useKeyboardShortcuts({
         }
         case 'Delete':
         case 'Backspace': {
-          const { selectedId } = useAppStore.getState();
-          if (selectedId) {
+          const { selectedIds } = useAppStore.getState();
+          if (selectedIds.length > 0) {
             e.preventDefault();
-            useAppStore.getState().deleteAnnotation(selectedId);
+            useAppStore.getState().deleteSelected();
           }
           break;
         }
