@@ -219,14 +219,26 @@ export default function AnnotationCanvas({
     rafId.current = requestAnimationFrame(draw);
   }, [draw]);
 
-  const { getDrawingState, getDragState, getMarqueeState, cancelDrawing, cancelDrag, cancelMarquee } =
-    useCanvasInteraction(canvasRef, requestRedraw);
+  const {
+    getDrawingState,
+    getDragState,
+    getMarqueeState,
+    cancelDrawing,
+    cancelDrag,
+    cancelMarquee,
+  } = useCanvasInteraction(canvasRef, requestRedraw);
   useEffect(() => {
     getDrawingStateRef.current = getDrawingState;
     getDragStateRef.current = getDragState;
     getMarqueeStateRef.current = getMarqueeState;
   }, [getDrawingState, getDragState, getMarqueeState]);
-  useKeyboardShortcuts({ cancelDrawing, cancelDrag, cancelMarquee, isHelpOpen, toggleHelp: onToggleHelp });
+  useKeyboardShortcuts({
+    cancelDrawing,
+    cancelDrag,
+    cancelMarquee,
+    isHelpOpen,
+    toggleHelp: onToggleHelp,
+  });
 
   const fitImageToCanvas = useCallback(() => {
     const canvas = canvasRef.current;

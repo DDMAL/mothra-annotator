@@ -353,7 +353,7 @@ export function useCanvasInteraction(
         marqueeState.current.currentX = ix;
         marqueeState.current.currentY = iy;
         requestRedraw();
-        return; 
+        return;
         // Currently blocking pan/drag updates (due to placement within the function)
       }
 
@@ -572,5 +572,12 @@ export function useCanvasInteraction(
     };
   }, [canvasRef, applyZoom, requestRedraw]);
 
-  return { getDrawingState, getDragState, getMarqueeState, cancelDrawing, cancelDrag, cancelMarquee };
+  return {
+    getDrawingState,
+    getDragState,
+    getMarqueeState,
+    cancelDrawing,
+    cancelDrag,
+    cancelMarquee,
+  };
 }
