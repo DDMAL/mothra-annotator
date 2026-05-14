@@ -6,6 +6,7 @@ import { downloadJSON } from '../lib/export';
 interface ShortcutActions {
   cancelDrawing: () => void;
   cancelDrag: () => void;
+  cancelMarquee: () => void;
   isHelpOpen: boolean;
   toggleHelp: () => void;
 }
@@ -19,6 +20,7 @@ function quickSaveJSON() {
 export function useKeyboardShortcuts({
   cancelDrawing,
   cancelDrag,
+  cancelMarquee,
   isHelpOpen,
   toggleHelp,
 }: ShortcutActions) {
@@ -105,6 +107,7 @@ export function useKeyboardShortcuts({
           } else {
             cancelDrawing();
             cancelDrag();
+            cancelMarquee();
             useAppStore.getState().setSelected(null);
           }
           break;
@@ -113,5 +116,5 @@ export function useKeyboardShortcuts({
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [cancelDrawing, cancelDrag, isHelpOpen, toggleHelp]);
+  }, [cancelDrawing, cancelDrag, cancelMarquee, isHelpOpen, toggleHelp]);
 }

@@ -167,6 +167,14 @@ export function useCanvasInteraction(
     }
   }, [requestRedraw]);
 
+  const cancelMarquee = useCallback(() => {
+    if (marqueeState.current.active) {
+      marqueeState.current.active = false;
+      useAppStore.getState().setSelectedIds([]);
+      requestRedraw();
+    }
+  }, [requestRedraw]);
+
   // Apply zoom toward a given screen-space point
   const applyZoom = useCallback(
     (newZoom: number, screenX: number, screenY: number) => {
@@ -345,7 +353,8 @@ export function useCanvasInteraction(
         marqueeState.current.currentX = ix;
         marqueeState.current.currentY = iy;
         requestRedraw();
-        return;
+        return; 
+        // Currently blocking pan/drag updates (due to placement within the function)
       }
 
       // Drag/resize preview
@@ -563,5 +572,5 @@ export function useCanvasInteraction(
     };
   }, [canvasRef, applyZoom, requestRedraw]);
 
-  return { getDrawingState, getDragState, getMarqueeState, cancelDrawing, cancelDrag };
+  return { getDrawingState, getDragState, getMarqueeState, cancelDrawing, cancelDrag, cancelMarquee };
 }
