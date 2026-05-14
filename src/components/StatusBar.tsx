@@ -30,6 +30,7 @@ export default function StatusBar() {
   const zoom = useAppStore((s) => s.zoom);
   const cursorImageCoords = useAppStore((s) => s.cursorImageCoords);
   const activeClassId = useAppStore((s) => s.activeClassId);
+  const imageName = useAppStore((s) => s.imageName);
 
   const activeClass = CLASSES.find((c) => c.id === activeClassId);
 
@@ -43,7 +44,13 @@ export default function StatusBar() {
         {cursorImageCoords ? `X: ${cursorImageCoords[0]}  Y: ${cursorImageCoords[1]}` : '—'}
       </span>
 
-      {/* Spacer */}
+      {/* Spacer + centered filename */}
+      <div className="flex-1" />
+      {imageName && (
+        <span className="max-w-xs truncate" title={imageName}>
+          {imageName}
+        </span>
+      )}
       <div className="flex-1" />
 
       {/* Session saved indicator */}
