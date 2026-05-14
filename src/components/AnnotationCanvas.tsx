@@ -64,6 +64,7 @@ export default function AnnotationCanvas({
       boxOpacity,
       showLabels,
       hiddenClassIds,
+      hideAllBoxes,
       selectedId,
       activeClassId,
       editMode,
@@ -82,7 +83,8 @@ export default function AnnotationCanvas({
 
     const dragS = getDragStateRef.current();
 
-    // Draw annotations (skip hidden classes)
+    // Draw annotations (skip when hidden or class is hidden)
+    if (hideAllBoxes) return;
     for (const ann of annotations) {
       if (hiddenClassIds.has(ann.classId)) continue;
 
@@ -261,6 +263,7 @@ export default function AnnotationCanvas({
         state.showLabels !== prevState.showLabels ||
         state.activeClassId !== prevState.activeClassId ||
         state.hiddenClassIds !== prevState.hiddenClassIds ||
+        state.hideAllBoxes !== prevState.hideAllBoxes ||
         state.editMode !== prevState.editMode
       ) {
         requestRedraw();
