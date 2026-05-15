@@ -55,11 +55,7 @@ function ScrollBar({
       const dragDelta = currentPos - dragStartScreenPos.current;
       if (availableTrack === 0) return;
       const panDelta = -(dragDelta / availableTrack) * scrollRange;
-      const newPan = clamp(
-        dragStartPanOffset.current + panDelta,
-        viewportSize - contentSize,
-        0,
-      );
+      const newPan = clamp(dragStartPanOffset.current + panDelta, viewportSize - contentSize, 0);
       onPanChange(newPan);
     },
     [isHorizontal, availableTrack, scrollRange, viewportSize, contentSize, onPanChange],
@@ -92,7 +88,7 @@ function ScrollBar({
         left: 0,
         width: trackLength,
         height: SCROLLBAR_THICKNESS,
-        backgroundColor: 'rgba(0,0,0,0.08)',
+        backgroundColor: 'rgba(255,255,255,0.75)',
         borderRadius: 6,
         pointerEvents: 'auto',
       }
@@ -102,7 +98,7 @@ function ScrollBar({
         top: 0,
         width: SCROLLBAR_THICKNESS,
         height: trackLength,
-        backgroundColor: 'rgba(0,0,0,0.08)',
+        backgroundColor: 'rgba(255,255,255,0.75)',
         borderRadius: 6,
         pointerEvents: 'auto',
       };
@@ -114,7 +110,7 @@ function ScrollBar({
         top: 1,
         width: thumbLength,
         height: SCROLLBAR_THICKNESS - 2,
-        backgroundColor: 'rgba(0,0,0,0.35)',
+        backgroundColor: 'rgba(80,80,80,0.55)',
         borderRadius: 5,
         cursor: 'grab',
       }
@@ -124,7 +120,7 @@ function ScrollBar({
         right: 1,
         height: thumbLength,
         width: SCROLLBAR_THICKNESS - 2,
-        backgroundColor: 'rgba(0,0,0,0.35)',
+        backgroundColor: 'rgba(80,80,80,0.55)',
         borderRadius: 5,
         cursor: 'grab',
       };
@@ -143,13 +139,13 @@ function ScrollBar({
 }
 
 export function ScrollBars() {
-  const zoom = useAppStore(s => s.zoom);
-  const panX = useAppStore(s => s.panX);
-  const panY = useAppStore(s => s.panY);
-  const imageWidth = useAppStore(s => s.imageWidth);
-  const imageHeight = useAppStore(s => s.imageHeight);
-  const canvasWidth = useAppStore(s => s.canvasWidth);
-  const canvasHeight = useAppStore(s => s.canvasHeight);
+  const zoom = useAppStore((s) => s.zoom);
+  const panX = useAppStore((s) => s.panX);
+  const panY = useAppStore((s) => s.panY);
+  const imageWidth = useAppStore((s) => s.imageWidth);
+  const imageHeight = useAppStore((s) => s.imageHeight);
+  const canvasWidth = useAppStore((s) => s.canvasWidth);
+  const canvasHeight = useAppStore((s) => s.canvasHeight);
 
   const showH = imageWidth * zoom > canvasWidth;
   const showV = imageHeight * zoom > canvasHeight;
@@ -195,7 +191,7 @@ export function ScrollBars() {
           style={{
             width: SCROLLBAR_THICKNESS,
             height: SCROLLBAR_THICKNESS,
-            backgroundColor: 'rgba(0,0,0,0.08)',
+            backgroundColor: 'rgba(255,255,255,0.75)',
           }}
         />
       )}

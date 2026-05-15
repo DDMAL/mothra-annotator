@@ -279,6 +279,7 @@ export default function AnnotationCanvas({
   return (
     <div ref={containerRef} className="flex-1 relative overflow-hidden bg-gray-100">
       <canvas ref={canvasRef} className="absolute inset-0" />
+      <ScrollBars />
     </div>
   );
 }
