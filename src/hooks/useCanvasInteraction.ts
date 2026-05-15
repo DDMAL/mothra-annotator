@@ -217,7 +217,8 @@ export function useCanvasInteraction(
       // Middle-click or Space+left-click → pan
       const isMiddle = e.button === 1;
       const isSpaceLeft = e.button === 0 && spaceHeld.current;
-      if (isMiddle || isSpaceLeft) {
+      const isRightClick = e.button === 2;
+      if (isMiddle || isSpaceLeft || isRightClick) {
         e.preventDefault();
         isPanning.current = true;
         panStart.current = { x: e.clientX, y: e.clientY };
@@ -493,6 +494,8 @@ export function useCanvasInteraction(
     canvas.addEventListener('pointerup', onPointerUp);
     canvas.addEventListener('pointercancel', onPointerUp);
     canvas.addEventListener('pointerleave', onPointerLeave);
+    const onContextMenu = (e: MouseEvent) => e.preventDefault();
+    canvas.addEventListener('contextmenu', onContextMenu);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
 
@@ -503,6 +506,7 @@ export function useCanvasInteraction(
       canvas.removeEventListener('pointerup', onPointerUp);
       canvas.removeEventListener('pointercancel', onPointerUp);
       canvas.removeEventListener('pointerleave', onPointerLeave);
+      canvas.removeEventListener('contextmenu', onContextMenu);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
     };
