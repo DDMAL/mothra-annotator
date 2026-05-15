@@ -2,8 +2,9 @@ import { useRef, useCallback } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { clamp } from '../lib/geometry';
 
-const SCROLLBAR_THICKNESS = 12;
+const SCROLLBAR_THICKNESS = 13;
 const MIN_THUMB_PX = 24;
+const TRACK_PADDING = 2;
 
 interface ScrollBarProps {
   orientation: 'horizontal' | 'vertical';
@@ -31,9 +32,9 @@ function ScrollBar({
   const visibleFraction = viewportSize / contentSize;
   const rawThumbLength = trackLength * visibleFraction;
   const thumbLength = Math.max(MIN_THUMB_PX, rawThumbLength);
-  const availableTrack = trackLength - thumbLength;
+  const availableTrack = trackLength - thumbLength - 2 * TRACK_PADDING;
   const scrollProgress = clamp(-panOffset / scrollRange, 0, 1);
-  const thumbOffset = scrollProgress * availableTrack;
+  const thumbOffset = TRACK_PADDING + scrollProgress * availableTrack;
 
   const isHorizontal = orientation === 'horizontal';
 
@@ -72,9 +73,13 @@ function ScrollBar({
       const rect = trackRef.current.getBoundingClientRect();
       const clickPos = isHorizontal ? e.clientX - rect.left : e.clientY - rect.top;
       const halfThumb = thumbLength / 2;
-      const targetCenter = clamp(clickPos, halfThumb, trackLength - halfThumb);
+      const targetCenter = clamp(
+        clickPos,
+        TRACK_PADDING + halfThumb,
+        trackLength - TRACK_PADDING - halfThumb,
+      );
       if (availableTrack === 0) return;
-      const newProgress = (targetCenter - halfThumb) / availableTrack;
+      const newProgress = (targetCenter - TRACK_PADDING - halfThumb) / availableTrack;
       const newPan = -newProgress * scrollRange;
       onPanChange(newPan);
     },
@@ -109,8 +114,8 @@ function ScrollBar({
         left: thumbOffset,
         top: 1,
         width: thumbLength,
-        height: SCROLLBAR_THICKNESS - 2,
-        backgroundColor: 'rgba(80,80,80,0.55)',
+        height: SCROLLBAR_THICKNESS - 3,
+        backgroundColor: 'rgba(100, 99, 99, 0.55)',
         borderRadius: 5,
         cursor: 'grab',
       }
@@ -119,8 +124,8 @@ function ScrollBar({
         top: thumbOffset,
         right: 1,
         height: thumbLength,
-        width: SCROLLBAR_THICKNESS - 2,
-        backgroundColor: 'rgba(80,80,80,0.55)',
+        width: SCROLLBAR_THICKNESS - 3,
+        backgroundColor: 'rgba(100, 99, 99, 0.55)',
         borderRadius: 5,
         cursor: 'grab',
       };
@@ -183,16 +188,6 @@ export function ScrollBars() {
           panOffset={panY}
           trackLength={canvasHeight - corner}
           onPanChange={handlePanY}
-        />
-      )}
-      {showH && showV && (
-        <div
-          className="absolute bottom-0 right-0 pointer-events-auto"
-          style={{
-            width: SCROLLBAR_THICKNESS,
-            height: SCROLLBAR_THICKNESS,
-            backgroundColor: 'rgba(255,255,255,0.75)',
-          }}
         />
       )}
     </div>
