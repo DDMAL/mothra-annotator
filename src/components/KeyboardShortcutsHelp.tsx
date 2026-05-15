@@ -49,7 +49,10 @@ const SHORTCUT_GROUPS: { title: string; shortcuts: Shortcut[] }[] = [
   },
   {
     title: 'Display',
-    shortcuts: [{ keys: ['L'], description: 'Toggle labels' }],
+    shortcuts: [
+      { keys: ['L'], description: 'Toggle labels' },
+      { keys: ['H'], description: 'Hide all boxes'}
+    ],
   },
   {
     title: 'File',
