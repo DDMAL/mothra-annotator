@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { useAppStore } from '../store/useAppStore';
+import { ScrollBars } from './ScrollBar';
 import { computeFitZoom } from '../lib/geometry';
 import { CLASSES, HANDLE_HALFSIZE_PX } from '../lib/constants';
 import { useCanvasInteraction, type DrawingState } from '../hooks/useCanvasInteraction';
