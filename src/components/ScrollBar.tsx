@@ -67,6 +67,7 @@ function ScrollBar({
     e.currentTarget.releasePointerCapture(e.pointerId);
   }, []);
 
+  // When user clicks off of the "thumb" of the scrollbar, page auto-pans to where their cursor clicks
   const onTrackPointerDown = useCallback(
     (e: React.PointerEvent) => {
       if (!trackRef.current || e.target !== trackRef.current) return;

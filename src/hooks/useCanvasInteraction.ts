@@ -494,6 +494,7 @@ export function useCanvasInteraction(
     canvas.addEventListener('pointerup', onPointerUp);
     canvas.addEventListener('pointercancel', onPointerUp);
     canvas.addEventListener('pointerleave', onPointerLeave);
+    // Prevent browser context menu so right-click drag can pan without interupption
     const onContextMenu = (e: MouseEvent) => e.preventDefault();
     canvas.addEventListener('contextmenu', onContextMenu);
     window.addEventListener('keydown', onKeyDown);
