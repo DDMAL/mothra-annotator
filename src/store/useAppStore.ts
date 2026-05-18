@@ -39,7 +39,6 @@ interface AppState {
   deleteAnnotation: (id: string) => void;
   deleteSelected: () => void;
   setActiveClass: (id: number) => void;
-  setSelected: (id: string | null) => void;
   setSelectedIds: (ids: string[]) => void;
   undo: () => void;
   clearAll: () => void;
@@ -124,8 +123,6 @@ export const useAppStore = create<AppState>((set) => ({
     }),
 
   setActiveClass: (id) => set({ activeClassId: id }),
-
-  setSelected: (id) => set({ selectedIds: id ? [id] : [] }),
 
   setSelectedIds: (ids) => set({ selectedIds: ids }),
 

@@ -108,7 +108,7 @@ export function useKeyboardShortcuts({
             cancelDrawing();
             cancelDrag();
             cancelMarquee();
-            useAppStore.getState().setSelected(null);
+            useAppStore.getState().setSelectedIds([]);
           }
           break;
       }

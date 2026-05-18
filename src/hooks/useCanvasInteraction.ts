@@ -254,7 +254,7 @@ export function useCanvasInteraction(
 
         if (editMode === 'draw') {
           // Drawing mode: always start drawing, ignore existing annotations
-          useAppStore.getState().setSelected(null);
+          useAppStore.getState().setSelectedIds([]);
           drawingState.current = {
             isDrawing: true,
             startX: ix,
@@ -296,7 +296,7 @@ export function useCanvasInteraction(
           for (let i = annotations.length - 1; i >= 0; i--) {
             if (hiddenClassIds.has(annotations[i].classId)) continue;
             if (pointInRect(ix, iy, annotations[i].bbox)) {
-              useAppStore.getState().setSelected(annotations[i].id);
+              useAppStore.getState().setSelectedIds([annotations[i].id]);
               // Start move drag
               dragActive.current = true;
               dragAnnotationId.current = annotations[i].id;
