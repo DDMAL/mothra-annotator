@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Annotation, EditMode } from '../lib/types';
-import { CLASSES, MIN_ZOOM, MAX_ZOOM, ZOOM_STEP } from '../lib/constants';
+import { CLASSES, MIN_ZOOM, MAX_ZOOM, ZOOM_FACTOR } from '../lib/constants';
 import { clamp, computeFitZoom } from '../lib/geometry';
 
 interface AppState {
@@ -175,7 +175,7 @@ export const useAppStore = create<AppState>((set) => ({
       canvasWidth && imageWidth
         ? computeFitZoom(canvasWidth, canvasHeight, imageWidth, imageHeight)
         : MIN_ZOOM;
-    const newZoom = clamp(zoom + ZOOM_STEP, minZoom, MAX_ZOOM);
+    const newZoom = clamp(zoom * ZOOM_FACTOR, minZoom, MAX_ZOOM);
     if (newZoom === zoom) return;
     const cx = canvasWidth / 2;
     const cy = canvasHeight / 2;
@@ -191,7 +191,7 @@ export const useAppStore = create<AppState>((set) => ({
       canvasWidth && imageWidth
         ? computeFitZoom(canvasWidth, canvasHeight, imageWidth, imageHeight)
         : MIN_ZOOM;
-    const newZoom = clamp(zoom - ZOOM_STEP, minZoom, MAX_ZOOM);
+    const newZoom = clamp(zoom / ZOOM_FACTOR, minZoom, MAX_ZOOM);
     if (newZoom === zoom) return;
     const cx = canvasWidth / 2;
     const cy = canvasHeight / 2;
