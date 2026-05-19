@@ -2,7 +2,13 @@ import { useEffect, useRef, useCallback } from 'react';
 import type { RefObject } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { screenToImage, clamp, computeFitZoom, pointInRect } from '../lib/geometry';
-import { MIN_ZOOM, MAX_ZOOM, ZOOM_FACTOR, MIN_BOX_SIZE, HANDLE_HALFSIZE_PX } from '../lib/constants';
+import {
+  MIN_ZOOM,
+  MAX_ZOOM,
+  ZOOM_FACTOR,
+  MIN_BOX_SIZE,
+  HANDLE_HALFSIZE_PX,
+} from '../lib/constants';
 import type { DragHandle, DragState } from '../lib/types';
 
 export interface DrawingState {
