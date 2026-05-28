@@ -476,6 +476,10 @@ export function useCanvasInteraction(
     // --- Space key tracking (for Space+drag pan) ---
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === ' ') {
+        const tag = (e.target as HTMLElement).tagName;
+        if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
+          e.preventDefault();
+        }
         spaceHeld.current = true;
         if (!isPanning.current && !drawingState.current.isDrawing && !dragActive.current) {
           canvas.style.cursor = 'grab';

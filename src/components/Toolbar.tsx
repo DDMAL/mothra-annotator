@@ -33,6 +33,9 @@ export default function Toolbar({ onToggleHelp }: ToolbarProps) {
   return (
     <div
       className={`h-12 bg-white border-b border-gray-200 flex items-center px-4 gap-1 text-sm select-none ${isIdle ? 'pointer-events-none opacity-40' : ''}`}
+      onMouseDown={(e) => {
+        if (e.target instanceof HTMLButtonElement) e.preventDefault();
+      }}
     >
       {/* Mode switch */}
       <div className="flex items-center rounded-md bg-gray-100 p-0.5">
