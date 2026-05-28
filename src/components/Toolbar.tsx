@@ -14,6 +14,7 @@ export default function Toolbar({ onToggleHelp }: ToolbarProps) {
   const setEditMode = useAppStore((s) => s.setEditMode);
 
   const hiddenClassIds = useAppStore((s) => s.hiddenClassIds);
+  const hideAllBoxes = useAppStore((s) => s.hideAllBoxes);
 
   const setActiveClass = useAppStore((s) => s.setActiveClass);
   const zoomIn = useAppStore((s) => s.zoomIn);
@@ -27,6 +28,7 @@ export default function Toolbar({ onToggleHelp }: ToolbarProps) {
 
   const isIdle = editMode === 'idle';
   const allVisible = hiddenClassIds.size === 0;
+  const effectiveAllVisible = allVisible && !hideAllBoxes;
 
   return (
     <div
@@ -98,28 +100,29 @@ export default function Toolbar({ onToggleHelp }: ToolbarProps) {
         <button
           onClick={toggleAllClassVisibility}
           className={`flex items-center gap-1.5 px-2 py-1 text-xs rounded transition-colors ${
-            allVisible ? 'bg-gray-100 text-gray-800' : 'text-gray-500 hover:bg-gray-50'
+            effectiveAllVisible ? 'bg-gray-100 text-gray-800' : 'text-gray-500 hover:bg-gray-50'
           }`}
           aria-label={allVisible ? 'Hide all classes' : 'Show all classes'}
           title={allVisible ? 'Hide all' : 'Show all'}
         >
           <span
             className={`w-3 h-3 rounded border flex items-center justify-center text-[8px] ${
-              allVisible ? 'bg-gray-600 border-gray-600 text-white' : 'border-gray-400'
+              effectiveAllVisible ? 'bg-gray-600 border-gray-600 text-white' : 'border-gray-400'
             }`}
           >
-            {allVisible ? '✓' : ''}
+            {effectiveAllVisible ? '✓' : ''}
           </span>
           All
         </button>
         {CLASSES.map((cls) => {
           const isVisible = !hiddenClassIds.has(cls.id);
+          const effectiveVisible = isVisible && !hideAllBoxes;
           return (
             <button
               key={cls.id}
               onClick={() => toggleClassVisibility(cls.id)}
               className={`flex items-center gap-1.5 px-2 py-1 text-xs rounded transition-colors ${
-                isVisible ? 'bg-gray-100 text-gray-800' : 'text-gray-500 hover:bg-gray-50'
+                effectiveVisible ? 'bg-gray-100 text-gray-800' : 'text-gray-500 hover:bg-gray-50'
               }`}
               aria-label={`${isVisible ? 'Hide' : 'Show'} ${cls.name} annotations`}
               title={`${isVisible ? 'Hide' : 'Show'} ${cls.name}`}
@@ -127,12 +130,12 @@ export default function Toolbar({ onToggleHelp }: ToolbarProps) {
               <span
                 className={`w-3 h-3 rounded border flex items-center justify-center text-[8px]`}
                 style={{
-                  backgroundColor: isVisible ? cls.color : undefined,
+                  backgroundColor: effectiveVisible ? cls.color : undefined,
                   borderColor: cls.color,
-                  color: isVisible ? 'white' : 'transparent',
+                  color: effectiveVisible ? 'white' : 'transparent',
                 }}
               >
-                {isVisible ? '✓' : ''}
+                {effectiveVisible ? '✓' : ''}
               </span>
               <span className="capitalize">{cls.name}</span>
             </button>

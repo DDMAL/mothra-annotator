@@ -26,6 +26,7 @@ interface AppState {
   boxOpacity: number;
   showLabels: boolean;
   hiddenClassIds: Set<number>;
+  hideAllBoxes: boolean;
   lastSaved: number | null;
 
   // Viewport state
@@ -43,6 +44,7 @@ interface AppState {
   clearAll: () => void;
   setOpacity: (value: number) => void;
   toggleLabels: () => void;
+  setHideAllBoxes: (value: boolean) => void;
   toggleClassVisibility: (classId: number) => void;
   toggleAllClassVisibility: () => void;
   setViewport: (zoom: number, panX: number, panY: number) => void;
@@ -81,6 +83,7 @@ export const useAppStore = create<AppState>((set) => ({
   boxOpacity: 0.3,
   showLabels: true,
   hiddenClassIds: new Set(),
+  hideAllBoxes: false,
   lastSaved: null,
 
   zoom: 1,
@@ -132,6 +135,8 @@ export const useAppStore = create<AppState>((set) => ({
   setOpacity: (value) => set({ boxOpacity: value }),
 
   toggleLabels: () => set((state) => ({ showLabels: !state.showLabels })),
+
+  setHideAllBoxes: (value) => set({ hideAllBoxes: value }),
 
   toggleClassVisibility: (classId) =>
     set((state) => {
