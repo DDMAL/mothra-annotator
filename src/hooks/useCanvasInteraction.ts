@@ -2,7 +2,13 @@ import { useEffect, useRef, useCallback } from 'react';
 import type { RefObject } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { screenToImage, clamp, computeFitZoom, pointInRect, rectsIntersect } from '../lib/geometry';
-import { MIN_ZOOM, MAX_ZOOM, ZOOM_STEP, MIN_BOX_SIZE, HANDLE_HALFSIZE_PX } from '../lib/constants';
+import {
+  MIN_ZOOM,
+  MAX_ZOOM,
+  ZOOM_FACTOR,
+  MIN_BOX_SIZE,
+  HANDLE_HALFSIZE_PX,
+} from '../lib/constants';
 import type { DragHandle, DragState, MarqueeState } from '../lib/types';
 
 export interface DrawingState {
@@ -217,8 +223,8 @@ export function useCanvasInteraction(
       if (e.ctrlKey || e.metaKey) {
         // Zoom toward cursor — must prevent browser zoom
         e.preventDefault();
-        const delta = e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP;
-        applyZoom(zoom + delta, e.offsetX, e.offsetY);
+        const factor = e.deltaY < 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR;
+        applyZoom(zoom * factor, e.offsetX, e.offsetY);
       } else if (e.shiftKey) {
         // Horizontal pan
         const d = e.deltaX || e.deltaY;
@@ -534,6 +540,10 @@ export function useCanvasInteraction(
     // --- Space key tracking (for Space+drag pan) ---
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === ' ') {
+        const tag = (e.target as HTMLElement).tagName;
+        if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
+          e.preventDefault();
+        }
         spaceHeld.current = true;
         if (!isPanning.current && !drawingState.current.isDrawing && !dragActive.current) {
           canvas.style.cursor = 'grab';

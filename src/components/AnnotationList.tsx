@@ -20,6 +20,8 @@ export default function AnnotationList() {
   const selectedIds = useAppStore((s) => s.selectedIds);
   const hiddenClassIds = useAppStore((s) => s.hiddenClassIds);
   const setSelectedIds = useAppStore((s) => s.setSelectedIds);
+  const hideAllBoxes = useAppStore((s) => s.hideAllBoxes);
+  const setSelected = useAppStore((s) => s.setSelected);
   const deleteAnnotation = useAppStore((s) => s.deleteAnnotation);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -76,7 +78,7 @@ export default function AnnotationList() {
                 onClick={() => setSelectedIds([ann.id])}
                 className={`px-3 py-2 cursor-pointer border-b border-gray-100 flex items-start gap-2 hover:bg-gray-50 ${
                   isSelected ? 'bg-blue-50 ring-1 ring-inset ring-blue-200' : ''
-                } ${isHidden ? 'opacity-40' : ''}`}
+                } ${isHidden || hideAllBoxes ? 'opacity-40' : ''}`}
               >
                 {/* Color dot */}
                 <span

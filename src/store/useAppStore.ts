@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Annotation, EditMode } from '../lib/types';
-import { CLASSES, MIN_ZOOM, MAX_ZOOM, ZOOM_STEP } from '../lib/constants';
+import { CLASSES, MIN_ZOOM, MAX_ZOOM, ZOOM_FACTOR } from '../lib/constants';
 import { clamp, computeFitZoom } from '../lib/geometry';
 
 interface AppState {
@@ -26,6 +26,7 @@ interface AppState {
   boxOpacity: number;
   showLabels: boolean;
   hiddenClassIds: Set<number>;
+  hideAllBoxes: boolean;
   lastSaved: number | null;
 
   // Viewport state
@@ -44,6 +45,7 @@ interface AppState {
   clearAll: () => void;
   setOpacity: (value: number) => void;
   toggleLabels: () => void;
+  setHideAllBoxes: (value: boolean) => void;
   toggleClassVisibility: (classId: number) => void;
   toggleAllClassVisibility: () => void;
   setViewport: (zoom: number, panX: number, panY: number) => void;
@@ -82,6 +84,7 @@ export const useAppStore = create<AppState>((set) => ({
   boxOpacity: 0.3,
   showLabels: true,
   hiddenClassIds: new Set(),
+  hideAllBoxes: false,
   lastSaved: null,
 
   zoom: 1,
@@ -145,6 +148,8 @@ export const useAppStore = create<AppState>((set) => ({
 
   toggleLabels: () => set((state) => ({ showLabels: !state.showLabels })),
 
+  setHideAllBoxes: (value) => set({ hideAllBoxes: value }),
+
   toggleClassVisibility: (classId) =>
     set((state) => {
       const next = new Set(state.hiddenClassIds);
@@ -187,7 +192,7 @@ export const useAppStore = create<AppState>((set) => ({
       canvasWidth && imageWidth
         ? computeFitZoom(canvasWidth, canvasHeight, imageWidth, imageHeight)
         : MIN_ZOOM;
-    const newZoom = clamp(zoom + ZOOM_STEP, minZoom, MAX_ZOOM);
+    const newZoom = clamp(zoom * ZOOM_FACTOR, minZoom, MAX_ZOOM);
     if (newZoom === zoom) return;
     const cx = canvasWidth / 2;
     const cy = canvasHeight / 2;
@@ -203,7 +208,7 @@ export const useAppStore = create<AppState>((set) => ({
       canvasWidth && imageWidth
         ? computeFitZoom(canvasWidth, canvasHeight, imageWidth, imageHeight)
         : MIN_ZOOM;
-    const newZoom = clamp(zoom - ZOOM_STEP, minZoom, MAX_ZOOM);
+    const newZoom = clamp(zoom / ZOOM_FACTOR, minZoom, MAX_ZOOM);
     if (newZoom === zoom) return;
     const cx = canvasWidth / 2;
     const cy = canvasHeight / 2;

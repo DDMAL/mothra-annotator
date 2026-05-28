@@ -98,6 +98,10 @@ export function useKeyboardShortcuts({
           }
           break;
         }
+        case 'h':
+        case 'H':
+          useAppStore.getState().setHideAllBoxes(true);
+          break;
         case 'l':
           useAppStore.getState().toggleLabels();
           break;
@@ -114,7 +118,17 @@ export function useKeyboardShortcuts({
       }
     };
 
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'h' || e.key === 'H') {
+        useAppStore.getState().setHideAllBoxes(false);
+      }
+    };
+
     window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+    };
   }, [cancelDrawing, cancelDrag, cancelMarquee, isHelpOpen, toggleHelp]);
 }
