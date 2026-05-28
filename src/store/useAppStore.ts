@@ -140,7 +140,7 @@ export const useAppStore = create<AppState>((set) => ({
       if (state.undoStack.length === 0) return state;
       const undoStack = [...state.undoStack];
       const annotations = undoStack.pop()!;
-      return { undoStack, annotations, selectedIds: [] };
+      return { undoStack, annotations, selectedIds: [], overlapCycleStack: [] };
     }),
 
   clearAll: () =>
@@ -148,6 +148,7 @@ export const useAppStore = create<AppState>((set) => ({
       undoStack: [...state.undoStack, state.annotations],
       annotations: [],
       selectedIds: [],
+      overlapCycleStack: []
     })),
 
   setOpacity: (value) => set({ boxOpacity: value }),
@@ -180,6 +181,7 @@ export const useAppStore = create<AppState>((set) => ({
     set((state) => ({
       undoStack: [...state.undoStack, state.annotations],
       annotations: state.annotations.map((a) => (a.id === id ? { ...a, bbox: newBbox } : a)),
+      overlapCycleStack: []
     })),
 
   setImageInfo: (name, width, height) =>
@@ -187,7 +189,7 @@ export const useAppStore = create<AppState>((set) => ({
 
   setCanvasSize: (width, height) => set({ canvasWidth: width, canvasHeight: height }),
 
-  restoreSession: (annotations) => set({ annotations, undoStack: [], selectedIds: [] }),
+  restoreSession: (annotations) => set({ annotations, undoStack: [], selectedIds: [], overlapCycleStack: [] }),
 
   setLastSaved: (timestamp) => set({ lastSaved: timestamp }),
 

@@ -136,6 +136,7 @@ export function useCanvasInteraction(
   const dragStartImage = useRef({ x: 0, y: 0 });
   const dragOriginalBbox = useRef<[number, number, number, number]>([0, 0, 0, 0]);
   const dragPreviewBbox = useRef<[number, number, number, number] | null>(null);
+  const pendingTopSelectId = useRef<string | null>(null);
 
   const dragState = useRef<DragState>({
     active: false,
@@ -169,6 +170,7 @@ export function useCanvasInteraction(
       dragAnnotationId.current = null;
       dragPreviewBbox.current = null;
       dragState.current = { active: false, annotationId: null, handle: 'body', previewBbox: null };
+      pendingTopSelectId.current = null;
       requestRedraw();
     }
   }, [requestRedraw]);
@@ -298,7 +300,7 @@ export function useCanvasInteraction(
             }
           }
 
-          // Body hit-test all annotations (reverse order = topmost first)
+          // Body hit-test all annotations: forward pass collects all hits bottom-top
           const hitIds: string[] = [];
           for (let i = 0; i < annotations.length; i++) {
             if (hiddenClassIds.has(annotations[i].classId)) continue;
@@ -309,11 +311,13 @@ export function useCanvasInteraction(
           useAppStore.getState().setOverlapCycleStack(hitIds);
 
           if (hitIds.length > 0) {
+          const topId = hitIds[hitIds.length - 1];
             // if the currently-selected annotation is among the hits, keep it so the user
             // can drag a lower layer w/o it jumping back to the top layer
-            // Otherwise, default to the topmost hit
-            const targetId = selectedId && hitIds.includes(selectedId) ? selectedId : hitIds[hitIds.length - 1];
+            // Record topId in pendingTopSelectId so a pure click (no drag) resets to topmost.
+            const targetId = selectedId && hitIds.includes(selectedId) ? selectedId : topId;
             const targetAnn = annotations.find((a) => a.id === targetId)!;
+            pendingTopSelectId.current = targetId !== topId ? topId : null;
             useAppStore.getState().setSelectedIds([targetId]);
             // start move drag for the topmost annotation
             dragActive.current = true;
@@ -334,6 +338,7 @@ export function useCanvasInteraction(
 
           // No hit → clear cycle stack and start marquee selection
           useAppStore.getState().setOverlapCycleStack([]);
+          pendingTopSelectId.current = null;
           marqueeState.current = {
             active: true,
             startX: ix,
@@ -493,15 +498,19 @@ export function useCanvasInteraction(
         const preview = dragPreviewBbox.current;
         const original = dragOriginalBbox.current;
 
-        if (
+        const wasMeaningfulDrag = 
           preview &&
           (Math.abs(preview[0] - original[0]) > 0.5 ||
             Math.abs(preview[1] - original[1]) > 0.5 ||
             Math.abs(preview[2] - original[2]) > 0.5 ||
-            Math.abs(preview[3] - original[3]) > 0.5)
-        ) {
+            Math.abs(preview[3] - original[3]) > 0.5);
+
+        if (wasMeaningfulDrag) {
           useAppStore.getState().moveAnnotation(dragAnnotationId.current, preview);
+        } else if (pendingTopSelectId.current) { // pure click on a lower-layer box -> reset selection to topmost
+          useAppStore.getState().setSelectedIds([pendingTopSelectId.current]);
         }
+        pendingTopSelectId.current = null;
 
         dragActive.current = false;
         dragAnnotationId.current = null;
