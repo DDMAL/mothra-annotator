@@ -8,6 +8,6 @@ export const CLASSES: AnnotationClass[] = [
 
 export const MIN_ZOOM = 0.25;
 export const MAX_ZOOM = 5.0;
-export const ZOOM_STEP = 0.1;
+export const ZOOM_FACTOR = 1.1; // multiplicative zoom instead of additive
 export const MIN_BOX_SIZE = 4; // px in image space, ignore smaller drags
 export const HANDLE_HALFSIZE_PX = 4; // half-size of resize handles in screen pixels (8px total)
