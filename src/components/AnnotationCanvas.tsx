@@ -73,7 +73,6 @@ export default function AnnotationCanvas({
       hiddenClassIds,
       selectedIds,
       hideAllBoxes,
-      selectedId,
       activeClassId,
       editMode,
     } = useAppStore.getState();
