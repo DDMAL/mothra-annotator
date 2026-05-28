@@ -309,21 +309,24 @@ export function useCanvasInteraction(
           useAppStore.getState().setOverlapCycleStack(hitIds);
 
           if (hitIds.length > 0) {
-            const topId = hitIds[hitIds.length - 1];
-            const topAnn = annotations.find((a) => a.id === topId)!;
-            useAppStore.getState().setSelectedIds([topId]);
+            // if the currently-selected annotation is among the hits, keep it so the user
+            // can drag a lower layer w/o it jumping back to the top layer
+            // Otherwise, default to the topmost hit
+            const targetId = selectedId && hitIds.includes(selectedId) ? selectedId : hitIds[hitIds.length - 1];
+            const targetAnn = annotations.find((a) => a.id === targetId)!;
+            useAppStore.getState().setSelectedIds([targetId]);
             // start move drag for the topmost annotation
             dragActive.current = true;
-            dragAnnotationId.current = topId;
+            dragAnnotationId.current = targetId;
             dragHandle.current = 'body';
             dragStartImage.current = { x: ix, y: iy};
-            dragOriginalBbox.current = [...topAnn.bbox];
-            dragPreviewBbox.current = [...topAnn.bbox];
+            dragOriginalBbox.current = [...targetAnn.bbox];
+            dragPreviewBbox.current = [...targetAnn.bbox];
             dragState.current = {
               active: true,
-              annotationId: topId,
+              annotationId: targetId,
               handle: 'body',
-              previewBbox: [...topAnn.bbox],
+              previewBbox: [...targetAnn.bbox],
             };
             canvas.setPointerCapture(e.pointerId);
             return
