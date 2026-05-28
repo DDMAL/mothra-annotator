@@ -21,7 +21,6 @@ export default function AnnotationList() {
   const hiddenClassIds = useAppStore((s) => s.hiddenClassIds);
   const setSelectedIds = useAppStore((s) => s.setSelectedIds);
   const hideAllBoxes = useAppStore((s) => s.hideAllBoxes);
-  const setSelected = useAppStore((s) => s.setSelected);
   const deleteAnnotation = useAppStore((s) => s.deleteAnnotation);
   const listRef = useRef<HTMLDivElement>(null);
 
