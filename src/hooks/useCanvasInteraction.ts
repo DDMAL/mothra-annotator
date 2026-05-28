@@ -299,29 +299,38 @@ export function useCanvasInteraction(
           }
 
           // Body hit-test all annotations (reverse order = topmost first)
-          for (let i = annotations.length - 1; i >= 0; i--) {
+          const hitIds: string[] = [];
+          for (let i = 0; i < annotations.length; i++) {
             if (hiddenClassIds.has(annotations[i].classId)) continue;
             if (pointInRect(ix, iy, annotations[i].bbox)) {
-              useAppStore.getState().setSelectedIds([annotations[i].id]);
-              // Start move drag
-              dragActive.current = true;
-              dragAnnotationId.current = annotations[i].id;
-              dragHandle.current = 'body';
-              dragStartImage.current = { x: ix, y: iy };
-              dragOriginalBbox.current = [...annotations[i].bbox];
-              dragPreviewBbox.current = [...annotations[i].bbox];
-              dragState.current = {
-                active: true,
-                annotationId: annotations[i].id,
-                handle: 'body',
-                previewBbox: [...annotations[i].bbox],
-              };
-              canvas.setPointerCapture(e.pointerId);
-              return;
+              hitIds.push(annotations[i].id);
             }
           }
+          useAppStore.getState().setOverlapCycleStack(hitIds);
 
-          // No hit → start marquee selection
+          if (hitIds.length > 0) {
+            const topId = hitIds[hitIds.length - 1];
+            const topAnn = annotations.find((a) => a.id === topId)!;
+            useAppStore.getState().setSelectedIds([topId]);
+            // start move drag for the topmost annotation
+            dragActive.current = true;
+            dragAnnotationId.current = topId;
+            dragHandle.current = 'body';
+            dragStartImage.current = { x: ix, y: iy};
+            dragOriginalBbox.current = [...topAnn.bbox];
+            dragPreviewBbox.current = [...topAnn.bbox];
+            dragState.current = {
+              active: true,
+              annotationId: topId,
+              handle: 'body',
+              previewBbox: [...topAnn.bbox],
+            };
+            canvas.setPointerCapture(e.pointerId);
+            return
+          }
+
+          // No hit → clear cycle stack and start marquee selection
+          useAppStore.getState().setOverlapCycleStack([]);
           marqueeState.current = {
             active: true,
             startX: ix,

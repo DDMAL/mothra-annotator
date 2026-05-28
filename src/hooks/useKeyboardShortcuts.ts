@@ -64,6 +64,18 @@ export function useKeyboardShortcuts({
           e.preventDefault();
           useAppStore.getState().resetView();
           break;
+        case 'ArrowUp':
+        case 'ArrowDown': {
+          const { editMode, selectedIds, overlapCycleStack } = useAppStore.getState();
+          if (editMode !== 'select' || selectedIds.length !== 1 || overlapCycleStack.length < 2) break;
+          e.preventDefault();
+          const currentIdx = overlapCycleStack.indexOf(selectedIds[0]);
+          if (currentIdx === -1) break;
+          const delta = e.key === 'ArrowUp' ? 1 : -1;
+          const nextIdx = (currentIdx + delta + overlapCycleStack.length) % overlapCycleStack.length;
+          useAppStore.getState().setSelectedIds([overlapCycleStack[nextIdx]]);
+          break;
+        }
         case '1':
         case '2':
         case '3': {

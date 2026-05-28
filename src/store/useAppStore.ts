@@ -9,6 +9,7 @@ interface AppState {
   activeClassId: number;
   selectedIds: string[];
   undoStack: Annotation[][];
+  overlapCycleStack: string[]; // For cycling through overlapping boxes
 
   // Image state
   imageName: string | null;
@@ -48,6 +49,7 @@ interface AppState {
   setHideAllBoxes: (value: boolean) => void;
   toggleClassVisibility: (classId: number) => void;
   toggleAllClassVisibility: () => void;
+  setOverlapCycleStack: (ids: string[]) => void;
   setViewport: (zoom: number, panX: number, panY: number) => void;
   setCursorCoords: (coords: [number, number] | null) => void;
   setImageInfo: (name: string, width: number, height: number) => void;
@@ -71,6 +73,7 @@ export const useAppStore = create<AppState>((set) => ({
   activeClassId: CLASSES[0].id,
   selectedIds: [],
   undoStack: [],
+  overlapCycleStack: [],
 
   editMode: 'idle',
 
@@ -112,6 +115,7 @@ export const useAppStore = create<AppState>((set) => ({
       undoStack: [...state.undoStack, state.annotations],
       annotations: state.annotations.filter((a) => a.id !== id),
       selectedIds: state.selectedIds.filter((s) => s !== id),
+      overlapCycleStack: [],
     })),
 
   deleteSelected: () =>
@@ -122,12 +126,14 @@ export const useAppStore = create<AppState>((set) => ({
         undoStack: [...state.undoStack, state.annotations],
         annotations: state.annotations.filter((a) => !toDelete.has(a.id)),
         selectedIds: [],
+        overlapCycleStack: [],
       };
     }),
 
   setActiveClass: (id) => set({ activeClassId: id }),
 
   setSelectedIds: (ids) => set({ selectedIds: ids }),
+  setOverlapCycleStack: (ids) => set ({ overlapCycleStack: ids}),
 
   undo: () =>
     set((state) => {
@@ -168,7 +174,7 @@ export const useAppStore = create<AppState>((set) => ({
 
   setCursorCoords: (coords) => set({ cursorImageCoords: coords }),
 
-  setEditMode: (mode) => set({ editMode: mode }),
+  setEditMode: (mode) => set({ editMode: mode, overlapCycleStack: [] }),
 
   moveAnnotation: (id, newBbox) =>
     set((state) => ({
