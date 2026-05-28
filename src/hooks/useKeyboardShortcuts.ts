@@ -6,6 +6,7 @@ import { downloadJSON } from '../lib/export';
 interface ShortcutActions {
   cancelDrawing: () => void;
   cancelDrag: () => void;
+  cancelMarquee: () => void;
   isHelpOpen: boolean;
   toggleHelp: () => void;
 }
@@ -19,6 +20,7 @@ function quickSaveJSON() {
 export function useKeyboardShortcuts({
   cancelDrawing,
   cancelDrag,
+  cancelMarquee,
   isHelpOpen,
   toggleHelp,
 }: ShortcutActions) {
@@ -71,10 +73,10 @@ export function useKeyboardShortcuts({
         }
         case 'Delete':
         case 'Backspace': {
-          const { selectedId } = useAppStore.getState();
-          if (selectedId) {
+          const { selectedIds } = useAppStore.getState();
+          if (selectedIds.length > 0) {
             e.preventDefault();
-            useAppStore.getState().deleteAnnotation(selectedId);
+            useAppStore.getState().deleteSelected();
           }
           break;
         }
@@ -109,7 +111,8 @@ export function useKeyboardShortcuts({
           } else {
             cancelDrawing();
             cancelDrag();
-            useAppStore.getState().setSelected(null);
+            cancelMarquee();
+            useAppStore.getState().setSelectedIds([]);
           }
           break;
       }
@@ -127,5 +130,5 @@ export function useKeyboardShortcuts({
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
     };
-  }, [cancelDrawing, cancelDrag, isHelpOpen, toggleHelp]);
+  }, [cancelDrawing, cancelDrag, cancelMarquee, isHelpOpen, toggleHelp]);
 }

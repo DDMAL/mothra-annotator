@@ -7,7 +7,7 @@ interface AppState {
   // Annotation state
   annotations: Annotation[];
   activeClassId: number;
-  selectedId: string | null;
+  selectedIds: string[];
   undoStack: Annotation[][];
 
   // Image state
@@ -38,8 +38,9 @@ interface AppState {
   // Actions
   addAnnotation: (bbox: [number, number, number, number]) => void;
   deleteAnnotation: (id: string) => void;
+  deleteSelected: () => void;
   setActiveClass: (id: number) => void;
-  setSelected: (id: string | null) => void;
+  setSelectedIds: (ids: string[]) => void;
   undo: () => void;
   clearAll: () => void;
   setOpacity: (value: number) => void;
@@ -68,7 +69,7 @@ export const useAppStore = create<AppState>((set) => ({
   // Initial state
   annotations: [],
   activeClassId: CLASSES[0].id,
-  selectedId: null,
+  selectedIds: [],
   undoStack: [],
 
   editMode: 'idle',
@@ -110,26 +111,37 @@ export const useAppStore = create<AppState>((set) => ({
     set((state) => ({
       undoStack: [...state.undoStack, state.annotations],
       annotations: state.annotations.filter((a) => a.id !== id),
-      selectedId: state.selectedId === id ? null : state.selectedId,
+      selectedIds: state.selectedIds.filter((s) => s !== id),
     })),
+
+  deleteSelected: () =>
+    set((state) => {
+      if (state.selectedIds.length === 0) return state;
+      const toDelete = new Set(state.selectedIds);
+      return {
+        undoStack: [...state.undoStack, state.annotations],
+        annotations: state.annotations.filter((a) => !toDelete.has(a.id)),
+        selectedIds: [],
+      };
+    }),
 
   setActiveClass: (id) => set({ activeClassId: id }),
 
-  setSelected: (id) => set({ selectedId: id }),
+  setSelectedIds: (ids) => set({ selectedIds: ids }),
 
   undo: () =>
     set((state) => {
       if (state.undoStack.length === 0) return state;
       const undoStack = [...state.undoStack];
       const annotations = undoStack.pop()!;
-      return { undoStack, annotations, selectedId: null };
+      return { undoStack, annotations, selectedIds: [] };
     }),
 
   clearAll: () =>
     set((state) => ({
       undoStack: [...state.undoStack, state.annotations],
       annotations: [],
-      selectedId: null,
+      selectedIds: [],
     })),
 
   setOpacity: (value) => set({ boxOpacity: value }),
@@ -169,7 +181,7 @@ export const useAppStore = create<AppState>((set) => ({
 
   setCanvasSize: (width, height) => set({ canvasWidth: width, canvasHeight: height }),
 
-  restoreSession: (annotations) => set({ annotations, undoStack: [], selectedId: null }),
+  restoreSession: (annotations) => set({ annotations, undoStack: [], selectedIds: [] }),
 
   setLastSaved: (timestamp) => set({ lastSaved: timestamp }),
 

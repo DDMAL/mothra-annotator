@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import type { RefObject } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { screenToImage, clamp, computeFitZoom, pointInRect } from '../lib/geometry';
+import { screenToImage, clamp, computeFitZoom, pointInRect, rectsIntersect } from '../lib/geometry';
 import {
   MIN_ZOOM,
   MAX_ZOOM,
@@ -9,7 +9,7 @@ import {
   MIN_BOX_SIZE,
   HANDLE_HALFSIZE_PX,
 } from '../lib/constants';
-import type { DragHandle, DragState } from '../lib/types';
+import type { DragHandle, DragState, MarqueeState } from '../lib/types';
 
 export interface DrawingState {
   isDrawing: boolean;
@@ -144,8 +144,17 @@ export function useCanvasInteraction(
     previewBbox: null,
   });
 
+  const marqueeState = useRef<MarqueeState>({
+    active: false,
+    startX: 0,
+    startY: 0,
+    currentX: 0,
+    currentY: 0,
+  });
+
   const getDrawingState = useCallback((): DrawingState => drawingState.current, []);
   const getDragState = useCallback((): DragState => dragState.current, []);
+  const getMarqueeState = useCallback((): MarqueeState => marqueeState.current, []);
 
   const cancelDrawing = useCallback(() => {
     if (drawingState.current.isDrawing) {
@@ -160,6 +169,14 @@ export function useCanvasInteraction(
       dragAnnotationId.current = null;
       dragPreviewBbox.current = null;
       dragState.current = { active: false, annotationId: null, handle: 'body', previewBbox: null };
+      requestRedraw();
+    }
+  }, [requestRedraw]);
+
+  const cancelMarquee = useCallback(() => {
+    if (marqueeState.current.active) {
+      marqueeState.current.active = false;
+      useAppStore.getState().setSelectedIds([]);
       requestRedraw();
     }
   }, [requestRedraw]);
@@ -236,13 +253,14 @@ export function useCanvasInteraction(
 
       // Left-click (no modifier) → mode-dependent behavior
       if (e.button === 0 && !e.ctrlKey && !e.metaKey) {
-        const { zoom, panX, panY, annotations, hiddenClassIds, editMode, selectedId } =
+        const { zoom, panX, panY, annotations, hiddenClassIds, editMode, selectedIds } =
           useAppStore.getState();
+        const selectedId = selectedIds.length === 1 ? selectedIds[0] : null;
         const [ix, iy] = screenToImage(e.offsetX, e.offsetY, zoom, panX, panY);
 
         if (editMode === 'draw') {
           // Drawing mode: always start drawing, ignore existing annotations
-          useAppStore.getState().setSelected(null);
+          useAppStore.getState().setSelectedIds([]);
           drawingState.current = {
             isDrawing: true,
             startX: ix,
@@ -284,7 +302,7 @@ export function useCanvasInteraction(
           for (let i = annotations.length - 1; i >= 0; i--) {
             if (hiddenClassIds.has(annotations[i].classId)) continue;
             if (pointInRect(ix, iy, annotations[i].bbox)) {
-              useAppStore.getState().setSelected(annotations[i].id);
+              useAppStore.getState().setSelectedIds([annotations[i].id]);
               // Start move drag
               dragActive.current = true;
               dragAnnotationId.current = annotations[i].id;
@@ -303,8 +321,16 @@ export function useCanvasInteraction(
             }
           }
 
-          // No hit → deselect
-          useAppStore.getState().setSelected(null);
+          // No hit → start marquee selection
+          marqueeState.current = {
+            active: true,
+            startX: ix,
+            startY: iy,
+            currentX: ix,
+            currentY: iy,
+          };
+          canvas.setPointerCapture(e.pointerId);
+          requestRedraw();
         }
         // editMode === 'idle' → do nothing
       }
@@ -324,6 +350,17 @@ export function useCanvasInteraction(
           }
           cursorRafPending.current = false;
         });
+      }
+
+      // Marquee update
+      if (marqueeState.current.active) {
+        const { zoom, panX, panY } = useAppStore.getState();
+        const [ix, iy] = screenToImage(e.offsetX, e.offsetY, zoom, panX, panY);
+        marqueeState.current.currentX = ix;
+        marqueeState.current.currentY = iy;
+        requestRedraw();
+        return;
+        // Currently blocking pan/drag updates (due to placement within the function)
       }
 
       // Drag/resize preview
@@ -374,8 +411,9 @@ export function useCanvasInteraction(
       }
 
       // Hover cursor in select mode
-      const { editMode, selectedId, annotations, hiddenClassIds, zoom, panX, panY } =
+      const { editMode, selectedIds, annotations, hiddenClassIds, zoom, panX, panY } =
         useAppStore.getState();
+      const selectedId = selectedIds.length === 1 ? selectedIds[0] : null;
       if (editMode === 'select' && !spaceHeld.current) {
         const [ix, iy] = screenToImage(e.offsetX, e.offsetY, zoom, panX, panY);
 
@@ -404,6 +442,32 @@ export function useCanvasInteraction(
     };
 
     const onPointerUp = (e: PointerEvent) => {
+      // End marquee — commit selection
+      if (marqueeState.current.active) {
+        const m = marqueeState.current;
+        const mx = Math.min(m.startX, m.currentX);
+        const my = Math.min(m.startY, m.currentY);
+        const mw = Math.abs(m.currentX - m.startX);
+        const mh = Math.abs(m.currentY - m.startY);
+
+        if (mw > 2 && mh > 2) {
+          const { annotations, hiddenClassIds } = useAppStore.getState();
+          const hit = annotations
+            .filter(
+              (a) => !hiddenClassIds.has(a.classId) && rectsIntersect([mx, my, mw, mh], a.bbox),
+            )
+            .map((a) => a.id);
+          useAppStore.getState().setSelectedIds(hit);
+        } else {
+          useAppStore.getState().setSelectedIds([]);
+        }
+
+        marqueeState.current.active = false;
+        canvas.releasePointerCapture(e.pointerId);
+        requestRedraw();
+        return;
+      }
+
       // End pan
       if (isPanning.current) {
         isPanning.current = false;
@@ -518,5 +582,12 @@ export function useCanvasInteraction(
     };
   }, [canvasRef, applyZoom, requestRedraw]);
 
-  return { getDrawingState, getDragState, cancelDrawing, cancelDrag };
+  return {
+    getDrawingState,
+    getDragState,
+    getMarqueeState,
+    cancelDrawing,
+    cancelDrag,
+    cancelMarquee,
+  };
 }

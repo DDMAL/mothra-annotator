@@ -4,7 +4,7 @@ import { computeFitZoom } from '../lib/geometry';
 import { CLASSES, HANDLE_HALFSIZE_PX } from '../lib/constants';
 import { useCanvasInteraction, type DrawingState } from '../hooks/useCanvasInteraction';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
-import type { DragState } from '../lib/types';
+import type { DragState, MarqueeState } from '../lib/types';
 
 interface AnnotationCanvasProps {
   image: HTMLImageElement;
@@ -49,6 +49,13 @@ export default function AnnotationCanvas({
     handle: 'body',
     previewBbox: null,
   }));
+  const getMarqueeStateRef = useRef<() => MarqueeState>(() => ({
+    active: false,
+    startX: 0,
+    startY: 0,
+    currentX: 0,
+    currentY: 0,
+  }));
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -64,11 +71,12 @@ export default function AnnotationCanvas({
       boxOpacity,
       showLabels,
       hiddenClassIds,
+      selectedIds,
       hideAllBoxes,
-      selectedId,
       activeClassId,
       editMode,
     } = useAppStore.getState();
+    const selectedIdSet = new Set(selectedIds);
     const dpr = window.devicePixelRatio || 1;
 
     // Clear
@@ -96,7 +104,7 @@ export default function AnnotationCanvas({
       }
 
       const color = getClassColor(ann.classId);
-      const isSelected = ann.id === selectedId;
+      const isSelected = selectedIdSet.has(ann.id);
 
       // Fill
       ctx.fillStyle = hexToRgba(color, boxOpacity);
@@ -117,8 +125,8 @@ export default function AnnotationCanvas({
         ctx.setLineDash([]);
       }
 
-      // Resize handles on selected annotation in select mode
-      if (isSelected && editMode === 'select') {
+      // Resize handles — only for a single selected annotation
+      if (isSelected && editMode === 'select' && selectedIds.length === 1) {
         // Draw handles in screen space for consistent pixel size
         const handlePositions: [number, number][] = [
           [x, y],
@@ -169,6 +177,24 @@ export default function AnnotationCanvas({
       }
     }
 
+    // Draw marquee selection rectangle
+    const ms = getMarqueeStateRef.current();
+    if (ms.active) {
+      const mx = Math.min(ms.startX, ms.currentX);
+      const my = Math.min(ms.startY, ms.currentY);
+      const mw = Math.abs(ms.currentX - ms.startX);
+      const mh = Math.abs(ms.currentY - ms.startY);
+      ctx.save();
+      ctx.fillStyle = 'rgba(59,130,246,0.12)';
+      ctx.fillRect(mx, my, mw, mh);
+      ctx.strokeStyle = 'rgba(59,130,246,0.85)';
+      ctx.lineWidth = 1.5 / zoom;
+      ctx.setLineDash([5 / zoom, 3 / zoom]);
+      ctx.strokeRect(mx, my, mw, mh);
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
     // Draw preview rect if currently drawing
     const ds = getDrawingStateRef.current();
     if (ds.isDrawing) {
@@ -195,15 +221,26 @@ export default function AnnotationCanvas({
     rafId.current = requestAnimationFrame(draw);
   }, [draw]);
 
-  const { getDrawingState, getDragState, cancelDrawing, cancelDrag } = useCanvasInteraction(
-    canvasRef,
-    requestRedraw,
-  );
+  const {
+    getDrawingState,
+    getDragState,
+    getMarqueeState,
+    cancelDrawing,
+    cancelDrag,
+    cancelMarquee,
+  } = useCanvasInteraction(canvasRef, requestRedraw);
   useEffect(() => {
     getDrawingStateRef.current = getDrawingState;
     getDragStateRef.current = getDragState;
-  }, [getDrawingState, getDragState]);
-  useKeyboardShortcuts({ cancelDrawing, cancelDrag, isHelpOpen, toggleHelp: onToggleHelp });
+    getMarqueeStateRef.current = getMarqueeState;
+  }, [getDrawingState, getDragState, getMarqueeState]);
+  useKeyboardShortcuts({
+    cancelDrawing,
+    cancelDrag,
+    cancelMarquee,
+    isHelpOpen,
+    toggleHelp: onToggleHelp,
+  });
 
   const fitImageToCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -258,7 +295,7 @@ export default function AnnotationCanvas({
         state.panX !== prevState.panX ||
         state.panY !== prevState.panY ||
         state.annotations !== prevState.annotations ||
-        state.selectedId !== prevState.selectedId ||
+        state.selectedIds !== prevState.selectedIds ||
         state.boxOpacity !== prevState.boxOpacity ||
         state.showLabels !== prevState.showLabels ||
         state.activeClassId !== prevState.activeClassId ||

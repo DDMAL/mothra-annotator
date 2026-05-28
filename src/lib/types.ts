@@ -35,3 +35,11 @@ export interface DragState {
   handle: DragHandle;
   previewBbox: [number, number, number, number] | null; // preview bbox during drag
 }
+
+export interface MarqueeState {
+  active: boolean;
+  startX: number;
+  startY: number;
+  currentX: number;
+  currentY: number; // all in image-space coords
+}

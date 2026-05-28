@@ -17,19 +17,19 @@ function formatTimestamp(iso: string): string {
 
 export default function AnnotationList() {
   const annotations = useAppStore((s) => s.annotations);
-  const selectedId = useAppStore((s) => s.selectedId);
+  const selectedIds = useAppStore((s) => s.selectedIds);
   const hiddenClassIds = useAppStore((s) => s.hiddenClassIds);
+  const setSelectedIds = useAppStore((s) => s.setSelectedIds);
   const hideAllBoxes = useAppStore((s) => s.hideAllBoxes);
-  const setSelected = useAppStore((s) => s.setSelected);
   const deleteAnnotation = useAppStore((s) => s.deleteAnnotation);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll selected row into view
+  // Auto-scroll selected row into view (only for single selection)
   useEffect(() => {
-    if (!selectedId || !listRef.current) return;
-    const row = listRef.current.querySelector(`[data-id="${selectedId}"]`);
+    if (selectedIds.length !== 1 || !listRef.current) return;
+    const row = listRef.current.querySelector(`[data-id="${selectedIds[0]}"]`);
     row?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }, [selectedId]);
+  }, [selectedIds]);
 
   // Sort newest first
   const sorted = [...annotations].sort(
@@ -68,13 +68,13 @@ export default function AnnotationList() {
         ) : (
           sorted.map((ann) => {
             const color = getClassColor(ann.classId);
-            const isSelected = ann.id === selectedId;
+            const isSelected = selectedIds.includes(ann.id);
             const isHidden = hiddenClassIds.has(ann.classId);
             return (
               <div
                 key={ann.id}
                 data-id={ann.id}
-                onClick={() => setSelected(ann.id)}
+                onClick={() => setSelectedIds([ann.id])}
                 className={`px-3 py-2 cursor-pointer border-b border-gray-100 flex items-start gap-2 hover:bg-gray-50 ${
                   isSelected ? 'bg-blue-50 ring-1 ring-inset ring-blue-200' : ''
                 } ${isHidden || hideAllBoxes ? 'opacity-40' : ''}`}
