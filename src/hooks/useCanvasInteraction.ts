@@ -311,7 +311,7 @@ export function useCanvasInteraction(
           useAppStore.getState().setOverlapCycleStack(hitIds);
 
           if (hitIds.length > 0) {
-          const topId = hitIds[hitIds.length - 1];
+            const topId = hitIds[hitIds.length - 1];
             // if the currently-selected annotation is among the hits, keep it so the user
             // can drag a lower layer w/o it jumping back to the top layer
             // Record topId in pendingTopSelectId so a pure click (no drag) resets to topmost.
@@ -323,7 +323,7 @@ export function useCanvasInteraction(
             dragActive.current = true;
             dragAnnotationId.current = targetId;
             dragHandle.current = 'body';
-            dragStartImage.current = { x: ix, y: iy};
+            dragStartImage.current = { x: ix, y: iy };
             dragOriginalBbox.current = [...targetAnn.bbox];
             dragPreviewBbox.current = [...targetAnn.bbox];
             dragState.current = {
@@ -333,7 +333,7 @@ export function useCanvasInteraction(
               previewBbox: [...targetAnn.bbox],
             };
             canvas.setPointerCapture(e.pointerId);
-            return
+            return;
           }
 
           // No hit → clear cycle stack and start marquee selection
@@ -498,7 +498,7 @@ export function useCanvasInteraction(
         const preview = dragPreviewBbox.current;
         const original = dragOriginalBbox.current;
 
-        const wasMeaningfulDrag = 
+        const wasMeaningfulDrag =
           preview &&
           (Math.abs(preview[0] - original[0]) > 0.5 ||
             Math.abs(preview[1] - original[1]) > 0.5 ||
@@ -507,7 +507,8 @@ export function useCanvasInteraction(
 
         if (wasMeaningfulDrag) {
           useAppStore.getState().moveAnnotation(dragAnnotationId.current, preview);
-        } else if (pendingTopSelectId.current) { // pure click on a lower-layer box -> reset selection to topmost
+        } else if (pendingTopSelectId.current) {
+          // pure click on a lower-layer box -> reset selection to topmost
           useAppStore.getState().setSelectedIds([pendingTopSelectId.current]);
         }
         pendingTopSelectId.current = null;
