@@ -103,10 +103,24 @@ export function fromYOLO(text: string, imageWidth: number, imageHeight: number):
     }
 
     const nums = parts.map(Number);
-    if (nums.some((n) => Number.isNaN(n))) {
+    if (nums.some((n) => !Number.isFinite(n))) {
       throw new Error(`Invalid YOLO line (non-numeric field): "${line}"`);
     }
     const [rawClassId, cx, cy, nw, nh] = nums;
+    if (
+      !Number.isInteger(rawClassId) ||
+      rawClassId < 0 ||
+      cx < 0 ||
+      cx > 1 ||
+      cy < 0 ||
+      cy > 1 ||
+      nw <= 0 ||
+      nw > 1 ||
+      nh <= 0 ||
+      nh > 1
+    ) {
+      throw new Error(`Invalid YOLO line (out-of-range field): "${line}"`);
+    }
 
     const classId = rawClassId + 1; // YOLO 0-indexed -> app 1-indexed
     if (!CLASSES.some((c) => c.id === classId)) {
