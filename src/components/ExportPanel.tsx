@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { downloadJSON, downloadYOLO, downloadBoth, importJSON } from '../lib/export';
+import { downloadJSON, downloadYOLO, downloadBoth, importJSON, importYOLO } from '../lib/export';
 import { clearSession } from '../lib/storage';
 import type { AnnotationSession } from '../lib/types';
 
@@ -16,6 +16,7 @@ export default function ExportPanel() {
   const imageWidth = useAppStore((s) => s.imageWidth);
   const imageHeight = useAppStore((s) => s.imageHeight);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const yoloFileInputRef = useRef<HTMLInputElement>(null);
 
   const hasAnnotations = annotationCount > 0;
   const hasImage = !!imageName;
@@ -55,6 +56,21 @@ export default function ExportPanel() {
       useAppStore.getState().restoreSession(session.annotations);
     } catch (err) {
       alert(`Failed to import JSON: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+
+    // Reset input so the same file can be re-imported
+    e.target.value = '';
+  };
+
+  const handleImportYOLO = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const annotations = await importYOLO(file, imageWidth, imageHeight);
+      useAppStore.getState().restoreSession(annotations);
+    } catch (err) {
+      alert(`Failed to import YOLO: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
 
     // Reset input so the same file can be re-imported
@@ -102,6 +118,21 @@ export default function ExportPanel() {
           type="file"
           accept=".json"
           onChange={handleImport}
+          className="hidden"
+        />
+        <button
+          onClick={() => yoloFileInputRef.current?.click()}
+          disabled={!hasImage}
+          className="w-full px-3 py-1.5 text-xs font-medium rounded bg-gray-50 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          aria-label="Import annotations from YOLO text file"
+        >
+          Import YOLO
+        </button>
+        <input
+          ref={yoloFileInputRef}
+          type="file"
+          accept=".txt"
+          onChange={handleImportYOLO}
           className="hidden"
         />
       </div>
