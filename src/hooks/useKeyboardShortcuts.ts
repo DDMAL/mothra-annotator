@@ -64,6 +64,37 @@ export function useKeyboardShortcuts({
           e.preventDefault();
           useAppStore.getState().resetView();
           break;
+        case 'ArrowUp':
+        case 'ArrowDown': {
+          const {
+            editMode,
+            selectedIds,
+            overlapCycleStack,
+            annotations,
+            hiddenClassIds,
+            hideAllBoxes,
+          } = useAppStore.getState();
+          if (
+            editMode !== 'select' ||
+            selectedIds.length !== 1 ||
+            overlapCycleStack.length < 2 ||
+            hideAllBoxes
+          )
+            break;
+          // Filter out any currently hidden anontations
+          const visibleStack = overlapCycleStack.filter((id) => {
+            const ann = annotations.find((a) => a.id === id);
+            return ann && !hiddenClassIds.has(ann.classId);
+          });
+          if (visibleStack.length < 2) break;
+          e.preventDefault();
+          const currentIdx = visibleStack.indexOf(selectedIds[0]);
+          if (currentIdx === -1) break;
+          const delta = e.key === 'ArrowUp' ? 1 : -1;
+          const nextIdx = (currentIdx + delta + visibleStack.length) % visibleStack.length;
+          useAppStore.getState().setSelectedIds([visibleStack[nextIdx]]);
+          break;
+        }
         case '1':
         case '2':
         case '3': {

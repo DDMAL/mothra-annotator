@@ -136,6 +136,7 @@ export function useCanvasInteraction(
   const dragStartImage = useRef({ x: 0, y: 0 });
   const dragOriginalBbox = useRef<[number, number, number, number]>([0, 0, 0, 0]);
   const dragPreviewBbox = useRef<[number, number, number, number] | null>(null);
+  const pendingTopSelectId = useRef<string | null>(null);
 
   const dragState = useRef<DragState>({
     active: false,
@@ -169,6 +170,7 @@ export function useCanvasInteraction(
       dragAnnotationId.current = null;
       dragPreviewBbox.current = null;
       dragState.current = { active: false, annotationId: null, handle: 'body', previewBbox: null };
+      pendingTopSelectId.current = null;
       requestRedraw();
     }
   }, [requestRedraw]);
@@ -298,30 +300,45 @@ export function useCanvasInteraction(
             }
           }
 
-          // Body hit-test all annotations (reverse order = topmost first)
-          for (let i = annotations.length - 1; i >= 0; i--) {
+          // Body hit-test all annotations: forward pass collects all hits bottom-top
+          const hitIds: string[] = [];
+          for (let i = 0; i < annotations.length; i++) {
             if (hiddenClassIds.has(annotations[i].classId)) continue;
             if (pointInRect(ix, iy, annotations[i].bbox)) {
-              useAppStore.getState().setSelectedIds([annotations[i].id]);
-              // Start move drag
-              dragActive.current = true;
-              dragAnnotationId.current = annotations[i].id;
-              dragHandle.current = 'body';
-              dragStartImage.current = { x: ix, y: iy };
-              dragOriginalBbox.current = [...annotations[i].bbox];
-              dragPreviewBbox.current = [...annotations[i].bbox];
-              dragState.current = {
-                active: true,
-                annotationId: annotations[i].id,
-                handle: 'body',
-                previewBbox: [...annotations[i].bbox],
-              };
-              canvas.setPointerCapture(e.pointerId);
-              return;
+              hitIds.push(annotations[i].id);
             }
           }
+          useAppStore.getState().setOverlapCycleStack(hitIds);
 
-          // No hit → start marquee selection
+          if (hitIds.length > 0) {
+            const topId = hitIds[hitIds.length - 1];
+            // if the currently-selected annotation is among the hits, keep it so the user
+            // can drag a lower layer w/o it jumping back to the top layer
+            // Record topId in pendingTopSelectId so a pure click (no drag) resets to topmost.
+            const targetId = selectedId && hitIds.includes(selectedId) ? selectedId : topId;
+            const targetAnn = annotations.find((a) => a.id === targetId)!;
+            pendingTopSelectId.current = targetId !== topId ? topId : null;
+            useAppStore.getState().setSelectedIds([targetId]);
+            // start move drag for the topmost annotation
+            dragActive.current = true;
+            dragAnnotationId.current = targetId;
+            dragHandle.current = 'body';
+            dragStartImage.current = { x: ix, y: iy };
+            dragOriginalBbox.current = [...targetAnn.bbox];
+            dragPreviewBbox.current = [...targetAnn.bbox];
+            dragState.current = {
+              active: true,
+              annotationId: targetId,
+              handle: 'body',
+              previewBbox: [...targetAnn.bbox],
+            };
+            canvas.setPointerCapture(e.pointerId);
+            return;
+          }
+
+          // No hit → clear cycle stack and start marquee selection
+          useAppStore.getState().setOverlapCycleStack([]);
+          pendingTopSelectId.current = null;
           marqueeState.current = {
             active: true,
             startX: ix,
@@ -481,15 +498,20 @@ export function useCanvasInteraction(
         const preview = dragPreviewBbox.current;
         const original = dragOriginalBbox.current;
 
-        if (
+        const wasMeaningfulDrag =
           preview &&
           (Math.abs(preview[0] - original[0]) > 0.5 ||
             Math.abs(preview[1] - original[1]) > 0.5 ||
             Math.abs(preview[2] - original[2]) > 0.5 ||
-            Math.abs(preview[3] - original[3]) > 0.5)
-        ) {
+            Math.abs(preview[3] - original[3]) > 0.5);
+
+        if (wasMeaningfulDrag) {
           useAppStore.getState().moveAnnotation(dragAnnotationId.current, preview);
+        } else if (pendingTopSelectId.current) {
+          // pure click on a lower-layer box -> reset selection to topmost
+          useAppStore.getState().setSelectedIds([pendingTopSelectId.current]);
         }
+        pendingTopSelectId.current = null;
 
         dragActive.current = false;
         dragAnnotationId.current = null;

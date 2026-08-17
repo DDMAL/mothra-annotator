@@ -32,6 +32,7 @@ const SHORTCUT_GROUPS: { title: string; shortcuts: Shortcut[] }[] = [
       { keys: ['Delete'], altKeys: ['Backspace'], description: 'Delete selected annotation' },
       { keys: ['Ctrl/Cmd', 'Z'], description: 'Undo' },
       { keys: ['Escape'], description: 'Cancel drawing / deselect' },
+      { keys: ['Up Arrow', 'Down Arrow'], description: 'Toggle between overlapping box layers' },
     ],
   },
   {
