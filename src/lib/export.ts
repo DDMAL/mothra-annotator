@@ -1,5 +1,6 @@
 import JSZip from 'jszip';
-import type { AnnotationSession } from './types';
+import type { Annotation, AnnotationSession } from './types';
+import { CLASSES } from './constants';
 
 export function toJSON(session: AnnotationSession): string {
   return JSON.stringify(session, null, 2);
@@ -86,4 +87,53 @@ export async function importJSON(file: File): Promise<AnnotationSession> {
   }
 
   return data as AnnotationSession;
+}
+
+export function fromYOLO(text: string, imageWidth: number, imageHeight: number): Annotation[] {
+  const lines = text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+  const annotations: Annotation[] = [];
+
+  for (const line of lines) {
+    const parts = line.split(/\s+/);
+    if (parts.length !== 5) {
+      throw new Error(`Invalid YOLO line: "${line}"`);
+    }
+
+    const nums = parts.map(Number);
+    if (nums.some((n) => Number.isNaN(n))) {
+      throw new Error(`Invalid YOLO line (non-numeric field): "${line}"`);
+    }
+    const [rawClassId, cx, cy, nw, nh] = nums;
+
+    const classId = rawClassId + 1; // YOLO 0-indexed -> app 1-indexed
+    if (!CLASSES.some((c) => c.id === classId)) {
+      throw new Error(`Unknown YOLO class id ${rawClassId} in line: "${line}"`);
+    }
+
+    const w = nw * imageWidth;
+    const h = nh * imageHeight;
+    const x = cx * imageWidth - w / 2;
+    const y = cy * imageHeight - h / 2;
+
+    annotations.push({
+      id: crypto.randomUUID(),
+      classId,
+      bbox: [x, y, w, h],
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  return annotations;
+}
+
+export async function importYOLO(
+  file: File,
+  imageWidth: number,
+  imageHeight: number,
+): Promise<Annotation[]> {
+  const text = await file.text();
+  return fromYOLO(text, imageWidth, imageHeight);
 }
