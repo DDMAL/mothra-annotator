@@ -30,11 +30,12 @@ export default function StatusBar() {
   const zoom = useAppStore((s) => s.zoom);
   const cursorImageCoords = useAppStore((s) => s.cursorImageCoords);
   const activeClassId = useAppStore((s) => s.activeClassId);
+  const imageName = useAppStore((s) => s.imageName);
 
   const activeClass = CLASSES.find((c) => c.id === activeClassId);
 
   return (
-    <div className="h-8 bg-white border-t border-gray-200 flex items-center px-4 gap-6 text-xs text-gray-500 select-none">
+    <div className="h-8 bg-white border-t border-gray-200 relative flex items-center px-4 gap-6 text-xs text-gray-500 select-none">
       {/* Zoom */}
       <span className="tabular-nums">{Math.round(zoom * 100)}%</span>
 
@@ -45,6 +46,16 @@ export default function StatusBar() {
 
       {/* Spacer */}
       <div className="flex-1" />
+
+      {/* Filename — absolutely centered so zoom % width changes don't shift it */}
+      {imageName && (
+        <span
+          className="absolute left-1/2 -translate-x-1/2 max-w-xs truncate pointer-events-none"
+          title={imageName}
+        >
+          {imageName}
+        </span>
+      )}
 
       {/* Session saved indicator */}
       <SessionIndicator />
