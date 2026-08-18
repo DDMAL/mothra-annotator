@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { useAppStore } from '../store/useAppStore';
+import { ScrollBars } from './ScrollBar';
 import { computeFitZoom } from '../lib/geometry';
 import { CLASSES, HANDLE_HALFSIZE_PX } from '../lib/constants';
 import { useCanvasInteraction, type DrawingState } from '../hooks/useCanvasInteraction';
@@ -318,6 +319,7 @@ export default function AnnotationCanvas({
   return (
     <div ref={containerRef} className="flex-1 relative overflow-hidden bg-gray-100">
       <canvas ref={canvasRef} className="absolute inset-0" />
+      <ScrollBars />
     </div>
   );
 }

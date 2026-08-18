@@ -46,6 +46,7 @@ const SHORTCUT_GROUPS: { title: string; shortcuts: Shortcut[] }[] = [
       { keys: ['Ctrl/Cmd + Scroll'], description: 'Zoom to cursor' },
       { keys: ['Space + Drag'], description: 'Pan' },
       { keys: ['Middle Click + Drag'], description: 'Pan' },
+      { keys: ['Right Click + Drag'], description: 'Pan' },
     ],
   },
   {
